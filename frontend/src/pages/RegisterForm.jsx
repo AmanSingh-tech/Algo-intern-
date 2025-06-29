@@ -32,9 +32,9 @@ const RegisterForm = () => {
   };
 
   return (
-    <div className="h-screen w-screen bg-gradient-to-br from-[#1f1f38] to-[#12122a] flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-[#0f0f1c] text-white rounded-xl shadow-xl p-8">
-        <h2 className="text-2xl font-semibold text-center mb-6">Register</h2>
+    <div className="min-h-screen w-screen bg-gradient-to-br from-[#1f1f38] to-[#12122a] flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl bg-[#0f0f1c] text-white rounded-xl shadow-2xl p-6 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-semibold text-center mb-6">Register</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input

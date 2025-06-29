@@ -8,12 +8,13 @@ import Practice from "./pages/Practice";
 import CodeEditor from "./pages/CodeEditor";
 import Home from "./pages/Home";
 import LoginForm from "./pages/LoginForm";
+import RegisterForm from "./pages/RegisterForm";
 
 function App() {
   return (
     <div className="flex h-screen bg-[#0a0f1c] text-white">
       {/* Sidebar - Fixed on the left */}
-      <div className="fixed top-0 left-0 h-screen w-60 z-50">
+      <div classNams4uLvmXyYZQRC_Re="fixed top-0 left-0 h-screen w-60 z-50">
         <Sidebar />
       </div>
 
@@ -32,6 +33,7 @@ function App() {
             <Route path="/login" element={<LoginForm />} /> {/* ✅ Login route */}
             <Route path="/practice" element={<Practice />} />
             <Route path="/code-editor" element={<CodeEditor />} />
+            <Route path="/register" element={<RegisterForm />} />
             {/* Add additional routes here */}
           </Routes>
         </main>
