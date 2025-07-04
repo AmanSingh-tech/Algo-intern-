@@ -1,20 +1,35 @@
 const express = require("express");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const cors = require("cors");
+
+dotenv.config();
+
 const app = express();
+const port = process.env.PORT || 5100;
+
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.get('/', (req, res) => {
-  res.send('Hello, World!');
-});
-app.post ('/run', (req, res) => {
-    const { code, language= 'cpp' } = req.body;
-    if(code === undefined) {
-        return res.status(400).json({ error: 'Code is required' });
-    }
-    console.log(`Running code in ${language}: ${code}`);
-    res.json({
-        message: 'Code executed successfully',
+
+const compileRoute = require("./routes/compile");
+const submitRoute = require("./routes/submit");
+const aiRoutes = require("./routes/ai");
+
+
+app.use("/api/compiler", compileRoute);
+app.use("/api/compiler", aiRoutes); 
+app.use("/api/compiler", submitRoute);
+
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => {
+    console.log("Connected to MongoDB from compiler");
+    app.listen(port, () => {
+      console.log(`Compiler server running at http://localhost:${port}`);
     });
-});
-app.listen(8000, () => {    
-  console.log('Server is running on http://localhost:8000');
-});
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err.message);
+  });
