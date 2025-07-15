@@ -1,14 +1,7 @@
-import {
-  Trophy,
-  Code,
-  Edit,
-  BarChart3,
-  Briefcase,
-  User,
-  BookOpen,
-  Users,
-} from "lucide-react"
-import { NavLink, useLocation } from "react-router-dom"
+"use client"
+
+import { Trophy, Code, Edit, BarChart3, Briefcase, User, BookOpen, Users } from "lucide-react"
+import { Link, useLocation } from "react-router-dom"
 import {
   Sidebar,
   SidebarContent,
@@ -34,7 +27,7 @@ const navigation = [
 ]
 
 export function AppSidebar() {
-  const { pathname } = useLocation()
+  const location = useLocation()
 
   return (
     <Sidebar
@@ -60,15 +53,16 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {navigation.map((item) => {
+                const isActive = location.pathname === item.href
                 return (
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === item.href}
+                      isActive={isActive}
                       tooltip={item.name}
                       className="hover:bg-sidebar-accent data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/20 data-[active=true]:to-accent/20 data-[active=true]:text-primary rounded-lg sm:rounded-xl md:rounded-2xl mx-0.5 sm:mx-1 group-data-[collapsible=icon]:mx-0 group-data-[collapsible=icon]:rounded-xl font-semibold transition-all duration-200 group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:p-0 h-9 sm:h-10 md:h-12 group-data-[collapsible=icon]:h-10"
                     >
-                      <NavLink
+                      <Link
                         to={item.href}
                         className="flex items-center w-full group-data-[collapsible=icon]:justify-center"
                       >
@@ -78,7 +72,7 @@ export function AppSidebar() {
                         <span className="font-semibold text-xs sm:text-sm md:text-base group-data-[collapsible=icon]:sr-only ml-2 sm:ml-3 truncate">
                           {item.name}
                         </span>
-                      </NavLink>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )
