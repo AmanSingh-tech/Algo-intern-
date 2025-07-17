@@ -1,0 +1,5 @@
+{
+  "/contests/page": "app/contests/page.js",
+  "/practice/page": "app/practice/page.js",
+  "/code-editor/page": "app/code-editor/page.js"
+}
