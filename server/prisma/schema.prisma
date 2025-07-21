@@ -1,19 +1,100 @@
+// For Linux
+// To Run in Docker Container
+
+// generator client {
+//   provider      = "prisma-client-js"
+//   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+// }
+
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  email     String   @unique
+  id        String   @id @default(uuid())
+  username  String   @unique
   password  String
-  codeforcesHandle String?
-  leetcodeHandle   String?
-  createdAt DateTime @default(now())
+  firstname String
+  lastname  String?
+  DOB       DateTime
+
+  comments  Comment[]
+  solved    Solve[]
 }
 
+model Solve {
+  id        String  @id @default(uuid())
+  success   Boolean
+  error     String?
+  code      String
+  language  String  @default("cpp")
+  date      DateTime @default(now())
+
+  // Foreign keys
+  problemId String
+  userId    String
+
+  // Relations
+  problem   Problem @relation(fields: [problemId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
+}
+
+model Problem {
+  id          String           @id @default(uuid())
+  title       String
+  description String
+  difficulty  String           @default("Easy")
+  constraints String           @default("")
+  inputtype   String           @default("")
+
+  testCases   TestCase[]
+  comments    Comment[]
+  solves      Solve[]
+  tags        ProblemToTags[]
+}
+
+model ProblemToTags {
+  id      String        @id @default(uuid())
+  pid     String
+  tid     String
+
+  problem Problem       @relation(fields: [pid], references: [id])
+  tag     Problem_Tags  @relation(fields: [tid], references: [id])
+
+  @@unique([pid, tid]) // Optional: prevents duplicate tag associations
+}
+
+model Problem_Tags {
+  id       String            @id @default(uuid())
+  tagName  String
+
+  problems ProblemToTags[]
+}
+
+
+model TestCase {
+  id        String   @id @default(uuid())
+  input     String
+  output    String
+
+  problemId String
+  problem   Problem  @relation(fields: [problemId], references: [id])
+}
+
+model Comment {
+  id        String  @id @default(uuid())
+  title     String
+  body      String
+
+  problemId String
+  userId    String
+
+  problem   Problem @relation(fields: [problemId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
+}
