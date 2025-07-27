@@ -1,3 +1,5 @@
+"use client"
+
 import { Header } from "@/components/header"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset } from "@/components/ui/sidebar"
@@ -8,7 +10,6 @@ import { Trophy, Medal, Award, TrendingUp, Crown, Star } from "lucide-react"
 
 const leaderboardData = [
   {
-    rank: 1,
     name: "Alex Chen",
     username: "alexc_dev",
     rating: 2847,
@@ -17,7 +18,6 @@ const leaderboardData = [
     avatar: "/placeholder.svg?height=40&width=40",
   },
   {
-    rank: 2,
     name: "Sarah Johnson",
     username: "sarah_codes",
     rating: 2756,
@@ -26,7 +26,6 @@ const leaderboardData = [
     avatar: "/placeholder.svg?height=40&width=40",
   },
   {
-    rank: 3,
     name: "Mike Rodriguez",
     username: "mike_r",
     rating: 2689,
@@ -35,7 +34,6 @@ const leaderboardData = [
     avatar: "/placeholder.svg?height=40&width=40",
   },
   {
-    rank: 4,
     name: "Emily Davis",
     username: "emily_dev",
     rating: 2634,
@@ -44,7 +42,6 @@ const leaderboardData = [
     avatar: "/placeholder.svg?height=40&width=40",
   },
   {
-    rank: 5,
     name: "David Kim",
     username: "david_k",
     rating: 2587,
@@ -55,6 +52,9 @@ const leaderboardData = [
 ]
 
 export default function LeaderboardPage() {
+  // Sort users by solved descending
+  const sortedLeaderboard = [...leaderboardData].sort((a, b) => b.solved - a.solved)
+
   return (
     <>
       <AppSidebar />
@@ -82,8 +82,8 @@ export default function LeaderboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-black text-primary">2847</div>
-                  <div className="text-sm text-muted-foreground mt-1">Alex Chen</div>
+                  <div className="text-4xl font-black text-primary">{sortedLeaderboard[0].rating}</div>
+                  <div className="text-sm text-muted-foreground mt-1">{sortedLeaderboard[0].name}</div>
                 </CardContent>
               </Card>
 
@@ -97,7 +97,7 @@ export default function LeaderboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-black text-accent">342</div>
+                  <div className="text-4xl font-black text-accent">{sortedLeaderboard[0].solved}</div>
                   <div className="text-sm text-muted-foreground mt-1">Problems</div>
                 </CardContent>
               </Card>
@@ -127,7 +127,11 @@ export default function LeaderboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-black text-accent">1,456</div>
+                  <div className="text-4xl font-black text-accent">
+                    {Math.round(
+                      sortedLeaderboard.reduce((sum, user) => sum + user.rating, 0) / sortedLeaderboard.length
+                    )}
+                  </div>
                   <div className="text-sm text-muted-foreground mt-1">Community</div>
                 </CardContent>
               </Card>
@@ -144,96 +148,99 @@ export default function LeaderboardPage() {
               </CardHeader>
               <CardContent className="px-8 pb-8">
                 <div className="space-y-6">
-                  {leaderboardData.map((user) => (
-                    <div
-                      key={user.rank}
-                      className="flex items-center justify-between p-6 bg-muted/30 hover:bg-primary/10 transition-colors rounded-3xl border border-border hover:border-primary/30"
-                    >
-                      <div className="flex items-center space-x-6">
-                        <div className="flex items-center justify-center w-12 h-12">
-                          {user.rank <= 3 ? (
-                            <div
-                              className={`w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black shadow-lg ${
-                                user.rank === 1
-                                  ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900"
-                                  : user.rank === 2
+                  {sortedLeaderboard.map((user, index) => {
+                    const rank = index + 1
+                    return (
+                      <div
+                        key={user.username}
+                        className="flex items-center justify-between p-6 bg-muted/30 hover:bg-primary/10 transition-colors rounded-3xl border border-border hover:border-primary/30"
+                      >
+                        <div className="flex items-center space-x-6">
+                          <div className="flex items-center justify-center w-12 h-12">
+                            {rank <= 3 ? (
+                              <div
+                                className={`w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black shadow-lg ${
+                                  rank === 1
+                                    ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900"
+                                    : rank === 2
                                     ? "bg-gradient-to-br from-gray-300 to-gray-500 text-gray-900"
                                     : "bg-gradient-to-br from-amber-400 to-amber-600 text-amber-900"
-                              }`}
-                            >
-                              {user.rank === 1 ? <Crown className="w-5 h-5" /> : user.rank}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground font-black text-lg">#{user.rank}</span>
-                          )}
+                                }`}
+                              >
+                                {rank === 1 ? <Crown className="w-5 h-5" /> : rank}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground font-black text-lg">#{rank}</span>
+                            )}
+                          </div>
+
+                          <div className="relative">
+                            <Avatar className="w-16 h-16 border-4 border-primary/20 shadow-lg">
+                              <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                              <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-black text-lg">
+                                {user.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            {rank === 1 && (
+                              <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                                <Star className="w-3 h-3 text-yellow-900" />
+                              </div>
+                            )}
+                          </div>
+
+                          <div>
+                            <div className="font-black text-foreground text-lg">{user.name}</div>
+                            <div className="text-muted-foreground text-sm font-medium">@{user.username}</div>
+                          </div>
                         </div>
 
-                        <div className="relative">
-                          <Avatar className="w-16 h-16 border-4 border-primary/20 shadow-lg">
-                            <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                            <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-black text-lg">
-                              {user.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          {user.rank === 1 && (
-                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
-                              <Star className="w-3 h-3 text-yellow-900" />
-                            </div>
-                          )}
-                        </div>
+                        <div className="flex items-center space-x-8">
+                          <div className="text-center">
+                            <div className="font-black text-foreground text-lg">{user.rating}</div>
+                            <div className="text-muted-foreground text-xs font-medium">Rating</div>
+                          </div>
 
-                        <div>
-                          <div className="font-black text-foreground text-lg">{user.name}</div>
-                          <div className="text-muted-foreground text-sm font-medium">@{user.username}</div>
-                        </div>
-                      </div>
+                          <div className="text-center">
+                            <div className="text-green-400 font-black text-lg">{user.solved}</div>
+                            <div className="text-muted-foreground text-xs font-medium">Solved</div>
+                          </div>
 
-                      <div className="flex items-center space-x-8">
-                        <div className="text-center">
-                          <div className="font-black text-foreground text-lg">{user.rating}</div>
-                          <div className="text-muted-foreground text-xs font-medium">Rating</div>
-                        </div>
+                          <div className="text-center">
+                            <div className="text-accent font-black text-lg">{user.contests}</div>
+                            <div className="text-muted-foreground text-xs font-medium">Contests</div>
+                          </div>
 
-                        <div className="text-center">
-                          <div className="text-green-400 font-black text-lg">{user.solved}</div>
-                          <div className="text-muted-foreground text-xs font-medium">Solved</div>
-                        </div>
-
-                        <div className="text-center">
-                          <div className="text-accent font-black text-lg">{user.contests}</div>
-                          <div className="text-muted-foreground text-xs font-medium">Contests</div>
-                        </div>
-
-                        <Badge
-                          variant="outline"
-                          className={`px-4 py-2 font-bold rounded-xl border-2 ${
-                            user.rating >= 2800
-                              ? "text-red-400 border-red-500/30 bg-red-500/10"
-                              : user.rating >= 2400
+                          <Badge
+                            variant="outline"
+                            className={`px-4 py-2 font-bold rounded-xl border-2 ${
+                              user.rating >= 2800
+                                ? "text-red-400 border-red-500/30 bg-red-500/10"
+                                : user.rating >= 2400
                                 ? "text-yellow-400 border-yellow-500/30 bg-yellow-500/10"
                                 : user.rating >= 2000
-                                  ? "text-primary border-primary/30 bg-primary/10"
-                                  : user.rating >= 1600
-                                    ? "text-accent border-accent/30 bg-accent/10"
-                                    : "text-green-400 border-green-500/30 bg-green-500/10"
-                          }`}
-                        >
-                          {user.rating >= 2800
-                            ? "Grandmaster"
-                            : user.rating >= 2400
+                                ? "text-primary border-primary/30 bg-primary/10"
+                                : user.rating >= 1600
+                                ? "text-accent border-accent/30 bg-accent/10"
+                                : "text-green-400 border-green-500/30 bg-green-500/10"
+                            }`}
+                          >
+                            {user.rating >= 2800
+                              ? "Grandmaster"
+                              : user.rating >= 2400
                               ? "Master"
                               : user.rating >= 2000
-                                ? "Expert"
-                                : user.rating >= 1600
-                                  ? "Specialist"
-                                  : "Pupil"}
-                        </Badge>
+                              ? "Expert"
+                              : user.rating >= 1600
+                              ? "Specialist"
+                              : "Pupil"}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </CardContent>
             </Card>

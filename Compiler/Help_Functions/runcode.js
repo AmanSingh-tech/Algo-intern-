@@ -16,26 +16,43 @@ if (!fs.existsSync(out_path)) {
 
 const TIME_LIMIT_MS = 3000;
 
-const runcode = async (filepath, input_path, mode) => {
-  const output_name = path.basename(filepath).split('.')[0];
-  const out_file_path = path.join(out_path, `${output_name}.exe`);
+const runcode = async (filepath, input_path, mode = 'OJ') => {
+  const ext = path.extname(filepath).slice(1);
+  const base = path.basename(filepath, `.${ext}`);
+  const out_file_path = path.join(out_path, `${base}.out`);
+
+  let command, runProcessPath;
 
   try {
-    await exec(`g++ "${filepath}" -o "${out_file_path}"`);
+    switch (ext) {
+      case "cpp":
+        await exec(`g++ "${filepath}" -o "${out_file_path}"`);
+        runProcessPath = out_file_path;
+        break;
+      case "c":
+        await exec(`gcc "${filepath}" -o "${out_file_path}"`);
+        runProcessPath = out_file_path;
+        break;
+      case "py":
+        command = `python3 "${filepath}"`;
+        break;
+      case "js":
+        command = `node "${filepath}"`;
+        break;
+      default:
+        throw new Error("Unsupported language");
+    }
+
+    const input = input_path && fs.existsSync(input_path)
+      ? fs.readFileSync(input_path, "utf-8")
+      : "";
 
     return await new Promise((resolve) => {
-      let input = '';
-      if (input_path && fs.existsSync(input_path)) {
-        input = fs.readFileSync(input_path, 'utf-8');
-      }
+      const child = command
+        ? spawn(command, { shell: true })
+        : spawn(runProcessPath, { stdio: ['pipe', 'pipe', 'pipe'] });
 
-      const child = spawn(out_file_path, {
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-
-      let stdout = '';
-      let stderr = '';
-      let killed = false;
+      let stdout = '', stderr = '', killed = false;
 
       const timer = setTimeout(() => {
         killed = true;
@@ -47,15 +64,10 @@ const runcode = async (filepath, input_path, mode) => {
         child.stdin.end();
       } catch {}
 
-      child.stdin.on('error', () => {}); // prevent EPIPE
+      child.stdin.on('error', () => {});
 
-      child.stdout.on('data', (data) => {
-        stdout += data.toString();
-      });
-
-      child.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
+      child.stdout.on('data', (data) => (stdout += data.toString()));
+      child.stderr.on('data', (data) => (stderr += data.toString()));
 
       child.on('close', () => {
         clearTimeout(timer);

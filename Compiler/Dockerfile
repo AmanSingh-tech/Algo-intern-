@@ -1,8 +1,7 @@
 FROM node:24-alpine3.21
 
-
-# Install only g++
-RUN apk add --no-cache g++
+# Install C++ and Python
+RUN apk add --no-cache g++ python3 py3-pip
 
 WORKDIR /app
 
@@ -14,8 +13,6 @@ COPY . .
 
 ENV PORT=3002
 
-# Expose the port app runs on
 EXPOSE 3002
 
-# Start the application
 CMD ["node", "index.js"]

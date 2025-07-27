@@ -6,17 +6,23 @@ import { Input } from "@/components/ui/input"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
+import Link from "next/link"
 
 export function Header() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+    const token = localStorage.getItem("token")
+    setLoggedIn(!!token)
   }, [])
 
-  if (!mounted) {
-    return null
+  if (!mounted) return null
+
+  const buttonClasses = {
+    login: "text-xs sm:text-sm px-3 sm:px-4 h-7 sm:h-8 md:h-10 rounded-lg sm:rounded-xl", 
   }
 
   return (
@@ -39,6 +45,7 @@ export function Header() {
             />
           </div>
         </div>
+
         <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 flex-shrink-0">
           <Button
             variant="ghost"
@@ -58,10 +65,17 @@ export function Header() {
               </>
             )}
           </Button>
-          <Button className="btn-primary text-primary-foreground font-semibold px-2 sm:px-3 md:px-6 rounded-lg sm:rounded-xl shadow-lg h-7 sm:h-8 md:h-10 text-xs sm:text-sm md:text-base">
-            <span className="hidden sm:inline">Login</span>
-            <span className="sm:hidden">Login</span>
-          </Button>
+
+          {!loggedIn && (
+            <Link href="/login" passHref>
+              <Button asChild className={buttonClasses.login}>
+                <span>
+                  <span className="hidden sm:inline">Login</span>
+                  <span className="sm:hidden">Login</span>
+                </span>
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </header>
