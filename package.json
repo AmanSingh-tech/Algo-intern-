@@ -1,4 +1,14 @@
 {
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:compiler\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "dev:compiler": "cd Compiler && node index.js",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install && cd ../Compiler && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
   "dependencies": {
     "@tabler/icons-react": "^3.34.0",
     "clsx": "^2.1.1",

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { Header } from "@/components/header"
+import { loginUser } from "@/lib/api"
 
 export default function LoginPage() {
   const [form, setForm] = useState({ username: "", password: "" })
@@ -25,15 +26,9 @@ export default function LoginPage() {
     setError("")
 
     try {
-      const res = await fetch("http://localhost:8000/new/user/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      })
+      const data = await loginUser(form.username, form.password)
 
-      const data = await res.json()
-
-      if (res.ok && data.jwt_token) {
+      if (data.jwt_token) {
         localStorage.setItem("token", data.jwt_token)
         router.push("/") // Go to home or dashboard
       } else {

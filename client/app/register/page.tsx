@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { Header } from "@/components/header"
+import { registerUser } from "@/lib/api"
 
 export default function RegisterPage() {
     const [username, setUsername] = useState("")
@@ -33,21 +34,15 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
 
   try {
-    const response = await fetch("http://localhost:8000/new/user/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData),
-    });
-
-    const data = await response.json();
+    const data = await registerUser(userData);
     console.log("Server response:", data);
 
-    if (response.ok) {
-  alert(data.message || "Registration successful ✅");
-} else {
-  alert(data.message || "Registration failed ❌");
-}
-router.push("/login"); // Redirect to login page after successful registration
+    if (data.message && !data.error) {
+      alert(data.message || "Registration successful ✅");
+      router.push("/login"); // Redirect to login page after successful registration
+    } else {
+      alert(data.message || "Registration failed ❌");
+    }
   } catch (err) {
     console.error("Error registering:", err);
     alert("Error occurred");

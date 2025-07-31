@@ -9,7 +9,7 @@ import getinputpath from "./Help_Functions/getinputpath.js";
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3002;
 
 app.use(cors());
 app.use(express.json());

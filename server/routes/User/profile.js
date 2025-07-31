@@ -6,175 +6,133 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const route = Router();
-const jwtpasskey = process.env.JWT_PASSKEY;
 const prisma = new PrismaClient();
 
-route.get('/profile', async (req, res) => {
-  try {
-    const { usertoken } = req.headers;
+// --- FIX 1: Centralized Authentication Middleware ---
+// We check for the key once at startup and create a reusable, secure function.
+const jwtpasskey = process.env.JWT_PASSKEY;
+if (!jwtpasskey) {
+  console.error("FATAL ERROR: JWT_PASSKEY is not defined in the .env file.");
+  process.exit(1); // Stop the server immediately if the key is missing
+}
 
-    if (!usertoken ) {
-      return res.status(401).json({
-        success: false,
-        message: "Authorization token missing or invalid"
-      });
+function authenticateToken(req, res, next) {
+  const tokenHeader = req.headers.usertoken;
+
+  if (!tokenHeader) {
+    return res.status(401).json({ success: false, message: "Authorization token is missing" });
+  }
+
+  try {
+    // Expecting "Bearer <token>"
+    const token = tokenHeader.split(" ")[1];
+    const decoded = jwt.verify(token, jwtpasskey);
+
+    if (typeof decoded !== 'object' || !decoded || !('id' in decoded)) {
+      return res.status(401).json({ success: false, message: "Token is invalid" });
     }
 
-    const token = usertoken.split(" ")[1];
+    // Attach the user's ID to the request object for all subsequent route handlers to use
+    req.userId = decoded.id;
+    next(); // If the token is valid, proceed to the actual route (e.g., /profile)
+  } catch (error) {
+    // This will catch errors like an expired or malformed token
+    return res.status(401).json({
+      success: false,
+      message: "Token verification failed. Please log in again.",
+    });
+  }
+}
 
-    // Verify token
-    const decoded = jwt.verify(token, jwtpasskey);
-    const userId = decoded.id;
+// --- FIX 2: Apply the middleware to all routes in this file ---
+// This single line protects every endpoint defined below it.
+route.use(authenticateToken);
 
-    // Fetch user
-    let user = await prisma.user.findUnique({
+
+// --- GET /profile ---
+// This route is now much cleaner. It can trust that if the code reaches here,
+// the user is authenticated and req.userId is available.
+route.get('/profile', async (req, res) => {
+  const userId = req.userId;
+
+  try {
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
-        id: false,
         username: true,
         firstname: true,
         lastname: true,
         DOB: true,
-        comments: true,
       }
     });
 
-    const uniqueSolved=await prisma.solve.findMany({
-      where: { userId },
-      distinct:['problemId'],
-      select: { problemId:true }
-    })
-
-
-
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found"
-      });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    user={
-      ...user,
-      solved:uniqueSolved
-    }
+    // Count the total number of problems solved
+    const solvedCount = await prisma.solve.count({
+      where: { userId: userId },
+    });
 
-    res.json({
+    // Send the complete user object with the solved count
+    return res.json({
       success: true,
-      user
+      user: {
+        ...user,
+        solved: solvedCount,
+        email: "user@example.com", // Default value since email field doesn't exist
+        rating: 1200, // Default rating since rating field doesn't exist  
+        createdAt: new Date().toISOString() // Default creation date
+      }
     });
 
   } catch (error) {
-    res.status(500).json({
+    console.error("Profile fetch error:", error);
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch profile",
-      error: error.message
     });
   }
 });
 
-route.get('/submission',async (req,res)=>{
-     const { usertoken } = req.headers;
+// --- Other routes are also simplified ---
 
-    if (!usertoken) {
-      return res.json({
-        success: false,
-        message: "Authorization token missing or invalid"
-      });
-    }
+route.get('/submission', async (req, res) => {
+  const userId = req.userId; // Provided by middleware
+  try {
+    const response = await prisma.solve.findMany({
+      where: { userId },
+      orderBy: { date: 'desc' },
+      select: {
+        code: true,
+        date: true,
+        problem: { select: { title: true } },
+      },
+    });
+    return res.json({ success: true, solved: response });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
 
+route.get("/submission/:pid", async (req, res) => {
+  const userId = req.userId; // Provided by middleware
+  const pid = req.params.pid;
 
-    const token = usertoken.split(" ")[1];
+  if (!pid) {
+    return res.status(400).json({ success: false, message: "Problem ID missing" });
+  }
 
-    // Verify token
-    const decoded = jwt.verify(token, jwtpasskey);
-    const userId = decoded.id;
+  try {
+    const response = await prisma.solve.findMany({
+      where: { userId: userId, problemId: pid },
+      select: { code: true, date: true }
+    });
+    return res.json({ success: true, submissions: response });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
 
-    try {
-      
-      const response = await prisma.solve.findMany({
-            where: {
-              userId: userId
-            },
-            orderBy:{
-              date:'desc'
-            },
-            select: {
-              code: true,
-              date: true,
-              problem: {
-                select: {
-                  title: true
-                }
-              }
-            }
-          });
-          
-          return res.json({
-            success:true,
-            solved:response
-          })
-
-    } catch (error) {
-      return res.json({
-        success:false,
-        message:error
-      })
-    }
-
-})
-
-route.get("/submission/:pid",async (req,res)=>{
-    const { usertoken } = req.headers;
-    const pid=req.params.pid;
-
-    if (!usertoken) {
-      return res.json({
-        success: false,
-        message: "Authorization token missing or invalid"
-      });
-    }
-
-    if(!pid){
-      return res.json({
-        success: false,
-        message: "Problem Id missing"
-      });
-    }
-
-    const token = usertoken.split(" ")[1];
-
-    // Verify token
-    const decoded = jwt.verify(token, jwtpasskey);
-    const userId = decoded.id;
-
-    try {
-      const response=await prisma.solve.findMany({
-        where:{
-          userId:userId,
-          problemId:pid
-        },
-        select:{
-          code:true,
-          date:true
-        }
-      })
-
-      return res.json({
-        success:true,
-        submissions:response
-      })
-
-
-    } catch (error) {
-      return res.json({
-        success:false,
-        message:error
-      })
-    }
-
-
-})
-
-
-export default route
+export default route;

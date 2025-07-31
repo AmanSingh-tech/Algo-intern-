@@ -1,262 +1,413 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Filter, CheckCircle, Clock, BookOpen } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Search, Clock, Users, Trophy, CheckCircle, Code, BookOpen, Target, Zap, Brain } from "lucide-react"
 
-interface CfProblem {
-  contestId?: number
-  index: string
-  name: string
-  type: string
-  rating?: number
-  tags: string[]
-}
-
-interface CfProblemStatistics {
-  contestId?: number
-  index: string
-  solvedCount: number
-}
-
-interface Problem {
-  id: string
-  title: string
-  difficulty: "Easy" | "Medium" | "Hard" | "Unknown"
-  category: string
-  solved: boolean
-  acceptance: string
-  description?: string
-}
-
-const categories = ["Array", "String", "Tree", "Graph", "Dynamic Programming", "Linked List", "Stack", "Queue"]
+// Static problems data to avoid import issues
+const STATIC_PROBLEMS = [
+  {
+    id: "two-sum",
+    title: "Two Sum",
+    difficulty: "Easy",
+    category: "Array",
+    acceptance: "49.1%",
+    description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+    tags: ["Array", "Hash Table"],
+    timeLimit: "1 second",
+    memoryLimit: "256 MB",
+    solved: false
+  },
+  {
+    id: "reverse-string",
+    title: "Reverse String",
+    difficulty: "Easy",
+    category: "String",
+    acceptance: "76.7%",
+    description: "Write a function that reverses a string. The input string is given as an array of characters.",
+    tags: ["Two Pointers", "String"],
+    timeLimit: "1 second",
+    memoryLimit: "256 MB",
+    solved: false
+  },
+  {
+    id: "maximum-subarray",
+    title: "Maximum Subarray",
+    difficulty: "Medium",
+    category: "Dynamic Programming",
+    acceptance: "54.5%",
+    description: "Given an integer array nums, find the subarray with the largest sum, and return its sum.",
+    tags: ["Array", "Divide and Conquer", "Dynamic Programming"],
+    timeLimit: "1 second",
+    memoryLimit: "256 MB",
+    solved: false
+  },
+  {
+    id: "valid-parentheses",
+    title: "Valid Parentheses",
+    difficulty: "Easy",
+    category: "Stack",
+    acceptance: "40.8%",
+    description: "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.",
+    tags: ["String", "Stack"],
+    timeLimit: "1 second",
+    memoryLimit: "256 MB",
+    solved: false
+  },
+  {
+    id: "climbing-stairs",
+    title: "Climbing Stairs",
+    difficulty: "Easy",
+    category: "Dynamic Programming",
+    acceptance: "52.0%",
+    description: "You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps.",
+    tags: ["Math", "Dynamic Programming", "Memoization"],
+    timeLimit: "1 second",
+    memoryLimit: "256 MB",
+    solved: false
+  }
+]
 
 export default function PracticePage() {
+  const [problems, setProblems] = useState(STATIC_PROBLEMS)
+  const [filteredProblems, setFilteredProblems] = useState(STATIC_PROBLEMS)
+  const [loading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedDifficulty, setSelectedDifficulty] = useState("all")
+  const [selectedCategory, setSelectedCategory] = useState("all")
   const router = useRouter()
-  const [problems, setProblems] = useState<Problem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   useEffect(() => {
-    async function fetchProblems() {
-      try {
-        setLoading(true)
-        setError(null)
+    filterProblems()
+  }, [searchTerm, selectedDifficulty, selectedCategory, problems])
 
-        const res = await fetch("https://codeforces.com/api/problemset.problems")
-        if (!res.ok) throw new Error("Failed to fetch problems")
+  const filterProblems = () => {
+    let filtered = problems
 
-        const data = await res.json()
-        if (data.status !== "OK") throw new Error("API returned error")
-
-        const cfProblems: CfProblem[] = data.result.problems
-        const cfStats: CfProblemStatistics[] = data.result.problemStatistics
-
-        // Map contestId+index to solvedCount
-        const statsMap = new Map<string, number>()
-        cfStats.forEach((stat) => {
-          statsMap.set(`${stat.contestId ?? ""}-${stat.index}`, stat.solvedCount)
-        })
-
-        function ratingToDifficulty(rating?: number): Problem["difficulty"] {
-          if (!rating) return "Unknown"
-          if (rating < 1200) return "Easy"
-          if (rating < 1800) return "Medium"
-          return "Hard"
-        }
-
-        const mappedProblems: Problem[] = cfProblems.map((p) => {
-          const id = `${p.contestId ?? "0"}-${p.index}`
-          const solvedCount = statsMap.get(id) ?? 0
-
-          return {
-            id,
-            title: p.name,
-            difficulty: ratingToDifficulty(p.rating),
-            category: p.tags.length > 0 ? p.tags[0] : "Unknown",
-            solved: false,
-            acceptance: `${solvedCount.toLocaleString()} solved`,
-          }
-        })
-
-        setProblems(mappedProblems)
-      } catch (err: any) {
-        setError(err.message || "Unknown error")
-      } finally {
-        setLoading(false)
-      }
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(problem =>
+        problem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        problem.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
     }
 
-    fetchProblems()
-  }, [])
+    // Filter by difficulty
+    if (selectedDifficulty !== "all") {
+      filtered = filtered.filter(problem => problem.difficulty === selectedDifficulty)
+    }
 
-  // Filter and search problems
-  const filteredProblems = problems.filter((problem) => {
-    const matchesSearch =
-      problem.title.toLowerCase().includes(search.toLowerCase()) ||
-      problem.category.toLowerCase().includes(search.toLowerCase()) ||
-      problem.difficulty.toLowerCase().includes(search.toLowerCase())
+    // Filter by category
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(problem => problem.category === selectedCategory)
+    }
 
-    const matchesCategory = selectedCategory ? problem.category === selectedCategory : true
+    setFilteredProblems(filtered)
+  }
 
-    return matchesSearch && matchesCategory
-  })
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case "Easy":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+      case "Medium":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+      case "Hard":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+    }
+  }
+
+  const getDifficultyIcon = (difficulty) => {
+    switch (difficulty) {
+      case "Easy":
+        return <Zap className="w-4 h-4" />
+      case "Medium":
+        return <Target className="w-4 h-4" />
+      case "Hard":
+        return <Brain className="w-4 h-4" />
+      default:
+        return <Code className="w-4 h-4" />
+    }
+  }
+
+  const handleSolveProblem = (problemId) => {
+    router.push(`/solve/${problemId}`)
+  }
+
+  const getUniqueCategories = () => {
+    const categories = problems.map(problem => problem.category)
+    return Array.from(new Set(categories))
+  }
+
+  const getStatistics = () => {
+    const total = problems.length
+    const solved = problems.filter(p => p.solved).length
+    const easy = problems.filter(p => p.difficulty === "Easy").length
+    const medium = problems.filter(p => p.difficulty === "Medium").length
+    const hard = problems.filter(p => p.difficulty === "Hard").length
+
+    return { total, solved, easy, medium, hard }
+  }
+
+  const stats = getStatistics()
+
+  if (loading) {
+    return (
+      <div className="flex h-screen">
+        <AppSidebar />
+        <SidebarInset className="flex-1">
+          <Header />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">Loading problems...</p>
+            </div>
+          </div>
+        </SidebarInset>
+      </div>
+    )
+  }
 
   return (
-    <>
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="flex-1 flex flex-col">
         <Header />
-        <main className="flex-1 p-8 bg-gradient-main min-h-screen">
-          <div className="max-w-7xl mx-auto">
-            <div className="mb-12">
-              <h1 className="text-5xl font-black mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                Practice Problems
-              </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl">
-                Sharpen your coding skills with our curated problem set and intelligent difficulty progression
-              </p>
+        <main className="flex-1 overflow-auto p-6">
+          {/* Header Section */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <Code className="w-8 h-8 text-blue-600" />
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Practice Problems</h1>
             </div>
+            <p className="text-gray-600 dark:text-gray-400">
+              Sharpen your coding skills with our curated collection of algorithmic challenges
+            </p>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all rounded-3xl feature-card dark:glow-purple">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-foreground text-sm font-bold flex items-center">
-                    <div className="w-8 h-8 bg-primary/20 rounded-xl flex items-center justify-center mr-3">
-                      <BookOpen className="w-4 h-4 text-primary" />
-                    </div>
-                    Total Problems
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-4xl font-black text-primary">{loading ? "..." : problems.length}</div>
-                  <div className="text-sm text-muted-foreground mt-1">Available challenges</div>
-                </CardContent>
-              </Card>
-            </div>
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium opacity-90">Total Problems</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  <span className="text-2xl font-bold">{stats.total}</span>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="flex flex-col md:flex-row gap-4 mb-8">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  placeholder="Search problems by title, category, or difficulty..."
-                  className="pl-12 h-14 bg-card/80 backdrop-blur-sm border-2 border-border text-foreground placeholder-muted-foreground focus:border-primary/50 rounded-2xl text-lg"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <Button
-                variant="outline"
-                className="h-14 px-8 border-2 border-primary/30 bg-card/80 backdrop-blur-sm text-primary hover:bg-primary/10 rounded-2xl font-semibold"
-                onClick={() => setSelectedCategory(null)}
-              >
-                <Filter className="w-5 h-5 mr-2" />
-                Clear Filter
-              </Button>
-            </div>
+            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium opacity-90">Solved</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="text-2xl font-bold">{stats.solved}</span>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="md:col-span-1">
-                <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg sticky top-8 rounded-3xl dark:glow-purple">
-                  <CardHeader>
-                    <CardTitle className="text-foreground text-lg font-bold">Categories</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {categories.map((category) => (
-                        <Button
-                          key={category}
-                          variant={selectedCategory === category ? "default" : "ghost"}
-                          className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl font-medium"
-                          onClick={() => setSelectedCategory(category)}
-                        >
-                          {category}
-                        </Button>
+            <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium opacity-90">Easy</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  <span className="text-2xl font-bold">{stats.easy}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium opacity-90">Medium</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  <span className="text-2xl font-bold">{stats.medium}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium opacity-90">Hard</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  <span className="text-2xl font-bold">{stats.hard}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filters Section */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Search className="w-5 h-5" />
+                Find Problems
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search problems or tags..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Difficulty</label>
+                  <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Difficulties" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Difficulties</SelectItem>
+                      <SelectItem value="Easy">Easy</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="Hard">Hard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {getUniqueCategories().map(category => (
+                        <SelectItem key={category} value={category}>{category}</SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Problems Grid */}
+          <div className="grid gap-4">
+            {filteredProblems.length === 0 ? (
+              <Card className="p-12 text-center">
+                <div className="text-gray-400 mb-4">
+                  <Search className="w-16 h-16 mx-auto" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                  No problems found
+                </h3>
+                <p className="text-gray-500 dark:text-gray-500">
+                  Try adjusting your search criteria or filters
+                </p>
+              </Card>
+            ) : (
+              filteredProblems.map((problem) => (
+                <Card key={problem.id} className="hover:shadow-lg transition-shadow duration-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          {problem.solved && (
+                            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                          )}
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            {problem.title}
+                          </h3>
+                        </div>
+
+                        <div className="flex items-center gap-4 mb-3">
+                          <Badge className={`flex items-center gap-1 ${getDifficultyColor(problem.difficulty)}`}>
+                            {getDifficultyIcon(problem.difficulty)}
+                            {problem.difficulty}
+                          </Badge>
+
+                          <Badge variant="secondary" className="flex items-center gap-1">
+                            <BookOpen className="w-3 h-3" />
+                            {problem.category}
+                          </Badge>
+
+                          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+                            <Users className="w-4 h-4" />
+                            <span>{problem.acceptance}</span>
+                          </div>
+
+                          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+                            <Clock className="w-4 h-4" />
+                            <span>{problem.timeLimit}</span>
+                          </div>
+                        </div>
+
+                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
+                          {problem.description.slice(0, 150)}...
+                        </p>
+
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {problem.tags.slice(0, 4).map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                          {problem.tags.length > 4 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{problem.tags.length - 4} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="ml-4 flex flex-col gap-2">
+                        <Button 
+                          onClick={() => handleSolveProblem(problem.id)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+                        >
+                          <Code className="w-4 h-4 mr-2" />
+                          Solve
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-
-              <div className="md:col-span-3">
-                <div className="space-y-6">
-                  {loading ? (
-                    <div>Loading problems...</div>
-                  ) : filteredProblems.length === 0 ? (
-                    <div>No problems found.</div>
-                  ) : (
-                    filteredProblems.map((problem) => (
-                      <Card
-                        key={problem.id}
-                        className="bg-card/90 backdrop-blur-sm border-2 border-border hover:border-primary/50 shadow-lg hover:shadow-2xl transition-all duration-300 rounded-3xl feature-card"
-                      >
-                        <CardContent className="p-8">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-4 mb-4">
-                                {problem.solved ? (
-                                  <div className="w-12 h-12 bg-green-500/20 rounded-2xl flex items-center justify-center">
-                                    <CheckCircle className="w-6 h-6 text-green-400" />
-                                  </div>
-                                ) : (
-                                  <div className="w-12 h-12 bg-muted/50 rounded-2xl flex items-center justify-center">
-                                    <Clock className="w-6 h-6 text-muted-foreground" />
-                                  </div>
-                                )}
-                                <div>
-                                  <h3 className="text-foreground font-black text-xl mb-2">{problem.title}</h3>
-                                  <div className="flex items-center space-x-3">
-                                    <Badge
-                                      variant="outline"
-                                      className={`px-3 py-1 font-semibold rounded-xl border-2 ${
-                                        problem.difficulty === "Easy"
-                                          ? "text-green-400 border-green-500/30 bg-green-500/10"
-                                          : problem.difficulty === "Medium"
-                                          ? "text-yellow-400 border-yellow-500/30 bg-yellow-500/10"
-                                          : "text-red-400 border-red-500/30 bg-red-500/10"
-                                      }`}
-                                    >
-                                      {problem.difficulty}
-                                    </Badge>
-                                    <Badge
-                                      variant="outline"
-                                      className="border-primary/30 text-primary bg-primary/10 font-semibold px-3 py-1 rounded-xl"
-                                    >
-                                      {problem.category}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-sm text-muted-foreground font-medium">
-                                Acceptance Rate: {problem.acceptance}
-                              </div>
-                            </div>
-                            <Button
-                              className="btn-primary text-primary-foreground font-semibold px-8 py-3 rounded-2xl shadow-lg ml-6"
-                              onClick={() => router.push(`/solve/${problem.id}`)}
-                            >
-                              {problem.solved ? "Solve Again" : "Solve"}
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
+              ))
+            )}
           </div>
+
+          {/* Load More or Pagination could go here */}
+          {filteredProblems.length > 0 && (
+            <div className="mt-8 text-center">
+              <p className="text-gray-500 dark:text-gray-400">
+                Showing {filteredProblems.length} of {problems.length} problems
+              </p>
+            </div>
+          )}
         </main>
       </SidebarInset>
-    </>
+    </div>
   )
 }

@@ -188,7 +188,54 @@ route.post('/submit/:pid',async (req,res)=>{
     })
   }
 
-
 })
+
+// Simple run endpoint for code editor (no problem ID required)
+route.post('/run', async (req, res) => {
+  const { code, language, inputs = "" } = req.body;
+    
+  if (!code || !language) {
+    return res.json({
+      success: false,
+      error: "Code and language are required"
+    });
+  }
+
+  try {
+    const response = await axios.post(`${process.env.COMPILER_PORT}/run`, {
+      code,
+      language,
+      inputs,
+      mode: "compiler",
+    });
+
+    const data = response.data;
+
+    if (data.success) {
+      return res.json({
+        success: true,
+        output: data.verdict || "Code executed successfully!",
+        verdict: data.verdict || "Execution completed",
+        err: data.err || "",
+        error: data.err || ""
+      });
+    } else {
+      return res.json({
+        success: false,
+        error: data.error || "Execution failed",
+        err: data.error || "Execution failed",
+        output: ""
+      });
+    }
+
+  } catch (error) {
+    return res.json({
+      success: false,
+      error: `Compiler service error: ${error.message}`,
+      err: `Compiler service error: ${error.message}`,
+      output: ""
+    });
+  }
+});
 
 export default route;

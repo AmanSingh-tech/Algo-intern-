@@ -1,9 +1,6 @@
 {
-  "/login/page": "app/login/page.js",
-  "/page": "app/page.js",
-  "/contests/page": "app/contests/page.js",
-  "/practice/page": "app/practice/page.js",
   "/code-editor/page": "app/code-editor/page.js",
-  "/leaderboard/page": "app/leaderboard/page.js",
-  "/internship-tracker/page": "app/internship-tracker/page.js"
+  "/page": "app/page.js",
+  "/solve/[problemId]/page": "app/solve/[problemId]/page.js",
+  "/practice/page": "app/practice/page.js"
 }

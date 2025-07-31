@@ -3,6 +3,9 @@
 // React and Next.js imports
 import { useEffect, useState } from 'react';
 
+// API imports
+import { getUserProfile } from '@/lib/api';
+
 // Your existing UI component imports
 import { Header } from "@/components/header";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -19,7 +22,7 @@ import { Edit, Github, Linkedin, Mail, MapPin, Calendar, Trophy, Code, Target, S
 // A utility function to get the token from localStorage
 const getToken = (): string | null => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('user_token');
+    return localStorage.getItem('token');
   }
   return null;
 };
@@ -30,9 +33,10 @@ interface UserProfile {
   firstname: string;
   lastname: string | null;
   DOB: string;
-  solved: Array<{ problemId: string }>;
-  // NOTE: Your backend doesn't provide email, location, rating, etc. yet.
-  // We will add them here once you update your API.
+  email: string;
+  rating: number;
+  createdAt: string;
+  solved: number;
 }
 
 export default function ProfilePage() {
@@ -51,14 +55,8 @@ export default function ProfilePage() {
       }
 
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-        const response = await fetch(`${API_URL}/user/profile`, {
-          method: 'GET',
-          headers: { 'usertoken': `Bearer ${token}` },
-        });
-
-        const data = await response.json();
-        if (!response.ok || !data.success) {
+        const data = await getUserProfile(token);
+        if (!data.success) {
           throw new Error(data.message || "Failed to fetch profile.");
         }
         setProfile(data.user);
@@ -188,7 +186,7 @@ export default function ProfilePage() {
                     </CardHeader>
                     <CardContent>
                       {/* DYNAMIC: Solved count */}
-                      <div className="text-4xl font-black text-primary">{profile?.solved?.length || 0}</div>
+                      <div className="text-4xl font-black text-primary">{profile?.solved || 0}</div>
                       <div className="text-sm text-muted-foreground mt-1">Total solved</div>
                     </CardContent>
                   </Card>

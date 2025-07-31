@@ -17,8 +17,27 @@ if (!fs.existsSync(dir_path)) {
 
 
 const getfilepath = (language, code) => {
+    // Map language names to file extensions
+    const languageToExtension = {
+        'javascript': 'js',
+        'python': 'py',
+        'java': 'java',
+        'cpp': 'cpp',
+        'c++': 'cpp',
+        'c': 'c',
+        'go': 'go',
+        // Also support direct extensions for backward compatibility
+        'js': 'js',
+        'py': 'py',
+        'java': 'java',
+        'cpp': 'cpp',
+        'c': 'c',
+        'go': 'go'
+    };
+
+    const extension = languageToExtension[language.toLowerCase()] || language;
     const uniq_file_name = uuid();
-    const filename = `${uniq_file_name}.${language}`;
+    const filename = `${uniq_file_name}.${extension}`;
     const filepath = path.join(dir_path, filename);
 
     // Write code to the file
