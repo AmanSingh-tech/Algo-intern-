@@ -10,7 +10,25 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Clock, Users, Trophy, CheckCircle, Code, BookOpen, Target, Zap, Brain } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Search, Clock, Users, Trophy, CheckCircle, Code, BookOpen, Target, Zap, Brain, Plus } from "lucide-react"
+import { createProblem, getProblems } from "@/lib/api"
+
+// Interface for problem structure
+interface Problem {
+  id: string
+  title: string
+  difficulty: string
+  category: string
+  acceptance: string
+  description: string
+  tags: string[]
+  timeLimit: string
+  memoryLimit: string
+  solved: boolean
+}
 
 // Static problems data to avoid import issues
 const STATIC_PROBLEMS = [
@@ -77,13 +95,82 @@ const STATIC_PROBLEMS = [
 ]
 
 export default function PracticePage() {
-  const [problems, setProblems] = useState(STATIC_PROBLEMS)
-  const [filteredProblems, setFilteredProblems] = useState(STATIC_PROBLEMS)
-  const [loading, setLoading] = useState(false)
+  const [problems, setProblems] = useState<Problem[]>([])
+  const [filteredProblems, setFilteredProblems] = useState<Problem[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedDifficulty, setSelectedDifficulty] = useState("all")
   const [selectedCategory, setSelectedCategory] = useState("all")
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    difficulty: "",
+    constraint: "",
+    inputtype: ""
+  })
   const router = useRouter()
+
+  // Function to transform API problems to match our interface
+  const transformApiProblem = (apiProblem: any): Problem => ({
+    id: apiProblem.id,
+    title: apiProblem.title,
+    difficulty: apiProblem.difficulty,
+    category: apiProblem.tags?.[0]?.tag?.tagName || "General", // Use first tag as category
+    acceptance: "N/A", // API doesn't provide this
+    description: apiProblem.description,
+    tags: apiProblem.tags?.map((t: any) => t.tag?.tagName).filter(Boolean) || [],
+    timeLimit: "1 second", // Default value
+    memoryLimit: "256 MB", // Default value
+    solved: false // Default value
+  })
+
+  // Fetch problems from API
+  useEffect(() => {
+    const fetchProblems = async () => {
+      try {
+        setLoading(true)
+        const response = await getProblems()
+        
+        if (response.success && response.problems) {
+          // Transform API problems and combine with static problems
+          const apiProblems = response.problems.map(transformApiProblem)
+          const combinedProblems = [...STATIC_PROBLEMS, ...apiProblems]
+          setProblems(combinedProblems)
+          setFilteredProblems(combinedProblems)
+        } else {
+          // If API fails, use static problems only
+          setProblems(STATIC_PROBLEMS)
+          setFilteredProblems(STATIC_PROBLEMS)
+        }
+      } catch (error) {
+        console.error("Error fetching problems:", error)
+        // Fallback to static problems
+        setProblems(STATIC_PROBLEMS)
+        setFilteredProblems(STATIC_PROBLEMS)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProblems()
+  }, [])
+
+  // Refresh problems list (called after adding a new problem)
+  const refreshProblems = async () => {
+    try {
+      const response = await getProblems()
+      if (response.success && response.problems) {
+        const apiProblems = response.problems.map(transformApiProblem)
+        const combinedProblems = [...STATIC_PROBLEMS, ...apiProblems]
+        setProblems(combinedProblems)
+        setFilteredProblems(combinedProblems)
+      }
+    } catch (error) {
+      console.error("Error refreshing problems:", error)
+    }
+  }
 
   useEffect(() => {
     filterProblems()
@@ -96,7 +183,7 @@ export default function PracticePage() {
     if (searchTerm) {
       filtered = filtered.filter(problem =>
         problem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        problem.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        problem.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       )
     }
 
@@ -113,7 +200,7 @@ export default function PracticePage() {
     setFilteredProblems(filtered)
   }
 
-  const getDifficultyColor = (difficulty) => {
+  const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Easy":
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
@@ -126,7 +213,7 @@ export default function PracticePage() {
     }
   }
 
-  const getDifficultyIcon = (difficulty) => {
+  const getDifficultyIcon = (difficulty: string) => {
     switch (difficulty) {
       case "Easy":
         return <Zap className="w-4 h-4" />
@@ -139,8 +226,46 @@ export default function PracticePage() {
     }
   }
 
-  const handleSolveProblem = (problemId) => {
+  const handleSolveProblem = (problemId: string) => {
     router.push(`/solve/${problemId}`)
+  }
+
+  const handleFormChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleAddProblem = async () => {
+    if (!formData.title || !formData.description || !formData.difficulty) {
+      alert("Please fill in all required fields (Title, Description, Difficulty)")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const result = await createProblem(formData)
+      if (result.success) {
+        alert("Problem created successfully!")
+        setIsDialogOpen(false)
+        setFormData({
+          title: "",
+          description: "",
+          difficulty: "",
+          constraint: "",
+          inputtype: ""
+        })
+        // Refresh the problems list to show the new problem
+        await refreshProblems()
+      } else {
+        alert(`Error: ${result.message}`)
+      }
+    } catch (error) {
+      alert("Failed to create problem. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const getUniqueCategories = () => {
@@ -185,9 +310,94 @@ export default function PracticePage() {
         <main className="flex-1 overflow-auto p-6">
           {/* Header Section */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <Code className="w-8 h-8 text-blue-600" />
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Practice Problems</h1>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <Code className="w-8 h-8 text-blue-600" />
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Practice Problems</h1>
+              </div>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Problem
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Add New Problem</DialogTitle>
+                    <DialogDescription>
+                      Create a new coding problem for the practice platform.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="title">Title *</Label>
+                      <Input
+                        id="title"
+                        placeholder="Enter problem title"
+                        value={formData.title}
+                        onChange={(e) => handleFormChange("title", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="description">Description *</Label>
+                      <Textarea
+                        id="description"
+                        placeholder="Enter problem description"
+                        rows={6}
+                        value={formData.description}
+                        onChange={(e) => handleFormChange("description", e.target.value)}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="difficulty">Difficulty *</Label>
+                        <Select value={formData.difficulty} onValueChange={(value) => handleFormChange("difficulty", value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select difficulty" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Easy">Easy</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="Hard">Hard</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="inputtype">Input Type</Label>
+                        <Input
+                          id="inputtype"
+                          placeholder="e.g., Array, String, etc."
+                          value={formData.inputtype}
+                          onChange={(e) => handleFormChange("inputtype", e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="constraint">Constraints</Label>
+                      <Textarea
+                        id="constraint"
+                        placeholder="Enter problem constraints"
+                        rows={3}
+                        value={formData.constraint}
+                        onChange={(e) => handleFormChange("constraint", e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleAddProblem} 
+                        disabled={isSubmitting}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        {isSubmitting ? "Creating..." : "Create Problem"}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
             <p className="text-gray-600 dark:text-gray-400">
               Sharpen your coding skills with our curated collection of algorithmic challenges

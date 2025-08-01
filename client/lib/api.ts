@@ -56,6 +56,25 @@ export async function getProblem(id: string) {
   return res.json();
 }
 
+// Create a new problem (admin only)
+export async function createProblem(data: {
+  title: string;
+  description: string;
+  difficulty: string;
+  constraint?: string;
+  inputtype?: string;
+}) {
+  const res = await fetch(`${BASE_URL}/api/problems`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  return res.json();
+}
+
 // Get user profile (requires authentication)
 export async function getUserProfile(token: string) {
   const res = await fetch(`${BASE_URL}/user/profile`, {

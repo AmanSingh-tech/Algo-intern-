@@ -2,6 +2,7 @@
 
 // React and Next.js imports
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 // API imports
 import { getUserProfile } from '@/lib/api';
@@ -40,17 +41,17 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
-  // State for profile data, loading, and errors
+  // State for profile data and errors (removed loading state)
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProfile = async () => {
       const token = getToken();
       if (!token) {
-        setError("Access Denied. Please log in.");
-        setLoading(false);
+        // Redirect to login page if no token
+        router.push('/login');
         return;
       }
 
@@ -62,24 +63,13 @@ export default function ProfilePage() {
         setProfile(data.user);
       } catch (err) {
         setError((err as Error).message);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchProfile();
-  }, []);
+  }, [router]);
 
   // --- UI Rendering ---
-
-  // Display a loading spinner while fetching data
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gradient-main text-white">
-        <div className="text-xl">Loading Profile...</div>
-      </div>
-    );
-  }
 
   // Display an error message if something went wrong
   if (error) {
@@ -91,6 +81,11 @@ export default function ProfilePage() {
         </div>
       </div>
     );
+  }
+
+  // If no profile data yet, show nothing (will redirect if no token)
+  if (!profile) {
+    return null;
   }
 
   // If data is fetched successfully, render the profile with dynamic data
