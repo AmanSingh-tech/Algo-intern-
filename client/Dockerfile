@@ -8,13 +8,16 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Install all dependencies including dev dependencies for build
+RUN npm install --legacy-peer-deps
 
 # Build the app
 RUN npm run build

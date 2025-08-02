@@ -7,7 +7,7 @@ const route = Router();
 const prisma = new PrismaClient();
 
 // Get all problems
-route.get('/problems', async (req, res) => {
+route.get('/', async (req, res) => {
     try {
         const problems = await prisma.problem.findMany({
             include: {
@@ -32,7 +32,7 @@ route.get('/problems', async (req, res) => {
 });
 
 // Get a single problem by ID
-route.get('/problem/:id', async (req, res) => {
+route.get('/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -43,50 +43,7 @@ route.get('/problem/:id', async (req, res) => {
                   orderBy:{
                     id:'asc'
                   },
-                  take:2  // Only first 2 for problem preview
-                },
-                comments: true,
-                tags:{
-                  include:{
-                    tag:true
-                  }
-                }
-            }
-        });
-
-        if (!problem) {
-            return res.status(404).json({
-                success: false,
-                message: 'Problem not found'
-            });
-        }
-
-        res.json({
-            success: true,
-            problem: problem
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-// Get a single problem with all test cases (for solving)
-route.get('/problem/:id/full', async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const problem = await prisma.problem.findUnique({
-            where: { id: id },
-            include: {
-                testCases: {
-                  orderBy:{
-                    id:'asc'
-                  }
-                  // No limit - get all test cases
+                  take:2
                 },
                 comments: true,
                 tags:{
@@ -118,8 +75,8 @@ route.get('/problem/:id/full', async (req, res) => {
 });
 
 
-// Create a problem (only for admins)
-route.post('/problems', async (req, res) => {
+// Create a new problem
+route.post('/', async (req, res) => {
   const { title, description , difficulty , constraint="" , inputtype="" } = req.body;
 
   if (!title || !description || !difficulty ) {

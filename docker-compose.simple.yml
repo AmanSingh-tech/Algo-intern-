@@ -1,0 +1,65 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: algotask
+      POSTGRES_USER: algotask_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-algotask_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U algotask_user -d algotask"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Backend Server
+  server:
+    build: ./server
+    environment:
+      PORT: 8000
+      DATABASE_URL: postgresql://algotask_user:${POSTGRES_PASSWORD:-algotask_password}@postgres:5432/algotask
+      JWT_PASSKEY: ${JWT_PASSKEY:-change-this-in-production}
+      SALT_ROUNDS: ${SALT_ROUNDS:-10}
+      GOOGLE_GEMINI_API_KEY: ${GOOGLE_GEMINI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["sh", "-c", "npx prisma migrate deploy && node index.js"]
+    restart: unless-stopped
+
+  # Code Compiler Service
+  compiler:
+    build: ./Compiler
+    environment:
+      PORT: 3002
+    ports:
+      - "3002:3002"
+    restart: unless-stopped
+
+  # Frontend (using pre-built static files)
+  frontend:
+    image: nginx:alpine
+    volumes:
+      - ./client/.next/static:/usr/share/nginx/html/_next/static
+      - ./client/.next/standalone:/app
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+      - compiler
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    driver: bridge

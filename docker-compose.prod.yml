@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -21,13 +19,13 @@ services:
   server:
     build: ./server
     environment:
-      PORT: 3001
+      PORT: 8000
       DATABASE_URL: postgresql://algotask_user:${POSTGRES_PASSWORD:-algotask_password}@postgres:5432/algotask
       JWT_PASSKEY: ${JWT_PASSKEY:-change-this-in-production}
       SALT_ROUNDS: ${SALT_ROUNDS:-10}
-      GOOGLE_GEMINI_API_KEY: ${GOOGLE_GEMINI_API_KEY}
+      GOOGLE_GEMINI_API_KEY: ${GOOGLE_GEMINI_API_KEY:-}
     ports:
-      - "8000:3001"
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
