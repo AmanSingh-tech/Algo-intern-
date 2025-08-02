@@ -11,30 +11,25 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
-    "/code-editor/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/code-editor/page.js"
-    ],
     "/practice/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/practice/page.js"
     ],
-    "/leaderboard/page": [
+    "/code-editor/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/leaderboard/page.js"
+      "static/chunks/app/code-editor/page.js"
     ],
-    "/profile/page": [
+    "/submissions/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/profile/page.js"
+      "static/chunks/app/submissions/page.js"
     ],
-    "/login/page": [
+    "/internship-tracker/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/login/page.js"
+      "static/chunks/app/internship-tracker/page.js"
     ]
   }
 }

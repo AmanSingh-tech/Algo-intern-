@@ -1,252 +1,273 @@
-"use client"
+'use client';
 
-import { Header } from "@/components/header"
-import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarInset } from "@/components/ui/sidebar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Trophy, Medal, Award, TrendingUp, Crown, Star } from "lucide-react"
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Trophy, Users, Target, TrendingUp, Crown, Medal, Award } from 'lucide-react';
+import { getLeaderboard, getLeaderboardStats } from '@/lib/api';
 
-const leaderboardData = [
-  {
-    name: "Alex Chen",
-    username: "alexc_dev",
-    rating: 2847,
-    solved: 342,
-    contests: 28,
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    name: "Sarah Johnson",
-    username: "sarah_codes",
-    rating: 2756,
-    solved: 298,
-    contests: 25,
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    name: "Mike Rodriguez",
-    username: "mike_r",
-    rating: 2689,
-    solved: 276,
-    contests: 22,
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    name: "Emily Davis",
-    username: "emily_dev",
-    rating: 2634,
-    solved: 254,
-    contests: 20,
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    name: "David Kim",
-    username: "david_k",
-    rating: 2587,
-    solved: 231,
-    contests: 18,
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-]
+interface LeaderboardUser {
+  id: string;
+  name: string;
+  username: string;
+  rating: number;
+  solved: number;
+  contests: number;
+  recentActivity: number;
+  avatar: string;
+  joinDate: string;
+  rank: number;
+}
+
+interface LeaderboardStats {
+  topRated: {
+    name: string;
+    username: string;
+    rating: number;
+    solved: number;
+  };
+  mostSolved: {
+    name: string;
+    username: string;
+    rating: number;
+    solved: number;
+  };
+  totalUsers: number;
+  totalSolves: number;
+}
 
 export default function LeaderboardPage() {
-  // Sort users by solved descending
-  const sortedLeaderboard = [...leaderboardData].sort((a, b) => b.solved - a.solved)
+  const [users, setUsers] = useState<LeaderboardUser[]>([]);
+  const [stats, setStats] = useState<LeaderboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  return (
-    <>
-      <AppSidebar />
-      <SidebarInset>
-        <Header />
-        <main className="flex-1 p-8 bg-gradient-main min-h-screen">
-          <div className="max-w-7xl mx-auto">
-            <div className="mb-12">
-              <h1 className="text-5xl font-black mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                Leaderboard
-              </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl">
-                Top performers in our coding community - compete and climb the ranks
-              </p>
-            </div>
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [leaderboardData, statsData] = await Promise.all([
+          getLeaderboard(),
+          getLeaderboardStats()
+        ]);
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all rounded-3xl feature-card dark:glow-purple">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-foreground flex items-center font-bold">
-                    <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center mr-4">
-                      <Crown className="w-6 h-6 text-primary" />
-                    </div>
-                    Top Rated
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-4xl font-black text-primary">{sortedLeaderboard[0].rating}</div>
-                  <div className="text-sm text-muted-foreground mt-1">{sortedLeaderboard[0].name}</div>
-                </CardContent>
-              </Card>
+        if (leaderboardData.success) {
+          setUsers(leaderboardData.data);
+        }
 
-              <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all rounded-3xl feature-card dark:glow-blue">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-foreground flex items-center font-bold">
-                    <div className="w-12 h-12 bg-accent/20 rounded-2xl flex items-center justify-center mr-4">
-                      <Medal className="w-6 h-6 text-accent" />
-                    </div>
-                    Most Solved
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-4xl font-black text-accent">{sortedLeaderboard[0].solved}</div>
-                  <div className="text-sm text-muted-foreground mt-1">Problems</div>
-                </CardContent>
-              </Card>
+        if (statsData.success) {
+          setStats(statsData.stats);
+        }
+      } catch (err) {
+        setError('Failed to load leaderboard data');
+        console.error('Leaderboard error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-              <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all rounded-3xl feature-card">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-foreground flex items-center font-bold">
-                    <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center mr-4">
-                      <Award className="w-6 h-6 text-primary" />
-                    </div>
-                    Active Users
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-4xl font-black text-primary">1,247</div>
-                  <div className="text-sm text-muted-foreground mt-1">This month</div>
-                </CardContent>
-              </Card>
+    fetchData();
+  }, []);
 
-              <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all rounded-3xl feature-card">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-foreground flex items-center font-bold">
-                    <div className="w-12 h-12 bg-accent/20 rounded-2xl flex items-center justify-center mr-4">
-                      <TrendingUp className="w-6 h-6 text-accent" />
-                    </div>
-                    Avg Rating
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-4xl font-black text-accent">
-                    {Math.round(
-                      sortedLeaderboard.reduce((sum, user) => sum + user.rating, 0) / sortedLeaderboard.length
-                    )}
-                  </div>
-                  <div className="text-sm text-muted-foreground mt-1">Community</div>
-                </CardContent>
-              </Card>
-            </div>
+  const getRankIcon = (rank: number) => {
+    if (rank === 1) return <Crown className="h-5 w-5 text-yellow-500" />;
+    if (rank === 2) return <Medal className="h-5 w-5 text-gray-400" />;
+    if (rank === 3) return <Award className="h-5 w-5 text-amber-600" />;
+    return <span className="text-sm font-medium text-muted-foreground">#{rank}</span>;
+  };
 
-            <Card className="bg-card/90 backdrop-blur-sm border-2 border-border shadow-lg rounded-3xl dark:glow-purple">
-              <CardHeader className="p-8">
-                <CardTitle className="text-foreground flex items-center font-black text-2xl">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mr-4">
-                    <Trophy className="w-6 h-6 text-primary-foreground" />
-                  </div>
-                  Global Rankings
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-8 pb-8">
-                <div className="space-y-6">
-                  {sortedLeaderboard.map((user, index) => {
-                    const rank = index + 1
-                    return (
-                      <div
-                        key={user.username}
-                        className="flex items-center justify-between p-6 bg-muted/30 hover:bg-primary/10 transition-colors rounded-3xl border border-border hover:border-primary/30"
-                      >
-                        <div className="flex items-center space-x-6">
-                          <div className="flex items-center justify-center w-12 h-12">
-                            {rank <= 3 ? (
-                              <div
-                                className={`w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black shadow-lg ${
-                                  rank === 1
-                                    ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900"
-                                    : rank === 2
-                                    ? "bg-gradient-to-br from-gray-300 to-gray-500 text-gray-900"
-                                    : "bg-gradient-to-br from-amber-400 to-amber-600 text-amber-900"
-                                }`}
-                              >
-                                {rank === 1 ? <Crown className="w-5 h-5" /> : rank}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground font-black text-lg">#{rank}</span>
-                            )}
-                          </div>
+  const getRatingColor = (rating: number) => {
+    if (rating >= 2400) return 'text-red-500';
+    if (rating >= 2100) return 'text-orange-500';
+    if (rating >= 1900) return 'text-purple-500';
+    if (rating >= 1600) return 'text-blue-500';
+    if (rating >= 1400) return 'text-green-500';
+    return 'text-gray-500';
+  };
 
-                          <div className="relative">
-                            <Avatar className="w-16 h-16 border-4 border-primary/20 shadow-lg">
-                              <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                              <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-black text-lg">
-                                {user.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            {rank === 1 && (
-                              <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
-                                <Star className="w-3 h-3 text-yellow-900" />
-                              </div>
-                            )}
-                          </div>
+  const getRatingBadge = (rating: number) => {
+    if (rating >= 2400) return { label: 'Grandmaster', color: 'bg-red-500' };
+    if (rating >= 2100) return { label: 'Master', color: 'bg-orange-500' };
+    if (rating >= 1900) return { label: 'Expert', color: 'bg-purple-500' };
+    if (rating >= 1600) return { label: 'Specialist', color: 'bg-blue-500' };
+    if (rating >= 1400) return { label: 'Pupil', color: 'bg-green-500' };
+    return { label: 'Newbie', color: 'bg-gray-500' };
+  };
 
-                          <div>
-                            <div className="font-black text-foreground text-lg">{user.name}</div>
-                            <div className="text-muted-foreground text-sm font-medium">@{user.username}</div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-8">
-                          <div className="text-center">
-                            <div className="font-black text-foreground text-lg">{user.rating}</div>
-                            <div className="text-muted-foreground text-xs font-medium">Rating</div>
-                          </div>
-
-                          <div className="text-center">
-                            <div className="text-green-400 font-black text-lg">{user.solved}</div>
-                            <div className="text-muted-foreground text-xs font-medium">Solved</div>
-                          </div>
-
-                          <div className="text-center">
-                            <div className="text-accent font-black text-lg">{user.contests}</div>
-                            <div className="text-muted-foreground text-xs font-medium">Contests</div>
-                          </div>
-
-                          <Badge
-                            variant="outline"
-                            className={`px-4 py-2 font-bold rounded-xl border-2 ${
-                              user.rating >= 2800
-                                ? "text-red-400 border-red-500/30 bg-red-500/10"
-                                : user.rating >= 2400
-                                ? "text-yellow-400 border-yellow-500/30 bg-yellow-500/10"
-                                : user.rating >= 2000
-                                ? "text-primary border-primary/30 bg-primary/10"
-                                : user.rating >= 1600
-                                ? "text-accent border-accent/30 bg-accent/10"
-                                : "text-green-400 border-green-500/30 bg-green-500/10"
-                            }`}
-                          >
-                            {user.rating >= 2800
-                              ? "Grandmaster"
-                              : user.rating >= 2400
-                              ? "Master"
-                              : user.rating >= 2000
-                              ? "Expert"
-                              : user.rating >= 1600
-                              ? "Specialist"
-                              : "Pupil"}
-                          </Badge>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Leaderboard</h1>
+          <p className="text-muted-foreground">Loading leaderboard data...</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded"></div>
               </CardContent>
             </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Leaderboard</h1>
+          <p className="text-red-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Leaderboard</h1>
+        <p className="text-muted-foreground">
+          Compete with fellow coders and climb the ranks!
+        </p>
+      </div>
+
+      {/* Statistics Cards */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Top Rated</CardTitle>
+              <Trophy className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.topRated.rating}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.topRated.name}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Most Solved</CardTitle>
+              <Target className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.mostSolved.solved}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.mostSolved.name}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalUsers}</div>
+              <p className="text-xs text-muted-foreground">
+                Active members
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Solves</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalSolves}</div>
+              <p className="text-xs text-muted-foreground">
+                Problems solved
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Leaderboard Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Rankings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {users.map((user) => {
+              const ratingBadge = getRatingBadge(user.rating);
+              return (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center justify-center w-8">
+                      {getRankIcon(user.rank)}
+                    </div>
+                    
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user.avatar} alt={user.name} />
+                      <AvatarFallback>
+                        {user.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-medium">{user.name}</h3>
+                        <Badge 
+                          variant="secondary" 
+                          className={`${ratingBadge.color} text-white text-xs`}
+                        >
+                          {ratingBadge.label}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">@{user.username}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-6 text-sm">
+                    <div className="text-center">
+                      <div className={`font-bold ${getRatingColor(user.rating)}`}>
+                        {user.rating}
+                      </div>
+                      <div className="text-muted-foreground">Rating</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="font-bold text-green-600">{user.solved}</div>
+                      <div className="text-muted-foreground">Solved</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">{user.contests}</div>
+                      <div className="text-muted-foreground">Contests</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="font-bold text-purple-600">{user.recentActivity}</div>
+                      <div className="text-muted-foreground">Recent</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </main>
-      </SidebarInset>
-    </>
-  )
+          
+          {users.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No users found in the leaderboard.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

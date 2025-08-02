@@ -1,0 +1,170 @@
+import jsPDF from 'jspdf';
+
+// Utility function to generate PDF from AI analysis results
+export function generatePDF(content: string, title: string, subtitle?: string) {
+  const doc = new jsPDF();
+  
+  // Set up the PDF
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
+  const margin = 20;
+  const maxLineWidth = pageWidth - (margin * 2);
+  
+  let yPosition = margin;
+  
+  // Add title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.text(title, margin, yPosition);
+  yPosition += 15;
+  
+  // Add subtitle if provided
+  if (subtitle) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text(subtitle, margin, yPosition);
+    yPosition += 10;
+  }
+  
+  // Add a separator line
+  doc.setDrawColor(200, 200, 200);
+  doc.line(margin, yPosition, pageWidth - margin, yPosition);
+  yPosition += 15;
+  
+  // Reset text color and font for content
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  
+  // Split content into lines and handle page breaks
+  const lines = doc.splitTextToSize(content, maxLineWidth);
+  
+  for (let i = 0; i < lines.length; i++) {
+    // Check if we need a new page
+    if (yPosition > pageHeight - margin) {
+      doc.addPage();
+      yPosition = margin;
+    }
+    
+    doc.text(lines[i], margin, yPosition);
+    yPosition += 6; // Line height
+  }
+  
+  // Add footer with generation timestamp
+  const timestamp = new Date().toLocaleString();
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Generated on ${timestamp} by CodeArena AI Assistant`, margin, pageHeight - 10);
+  
+  return doc;
+}
+
+// Generate and download PDF
+export function downloadPDF(content: string, title: string, subtitle?: string, filename?: string) {
+  const doc = generatePDF(content, title, subtitle);
+  const defaultFilename = filename || `${title.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}.pdf`;
+  doc.save(defaultFilename);
+}
+
+// Generate and display PDF in new tab
+export function displayPDF(content: string, title: string, subtitle?: string) {
+  const doc = generatePDF(content, title, subtitle);
+  const pdfUrl = doc.output('bloburl');
+  window.open(pdfUrl, '_blank');
+}
+
+// Enhanced PDF with better formatting for AI analysis
+export function generateAnalysisPDF(analysis: string, title: string, userInfo?: any) {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
+  const margin = 20;
+  const maxLineWidth = pageWidth - (margin * 2);
+  
+  let yPosition = margin;
+  
+  // Header with logo/branding
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(24);
+  doc.setTextColor(37, 99, 235); // Blue color
+  doc.text('CodeArena AI Analysis', margin, yPosition);
+  yPosition += 12;
+  
+  doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
+  doc.text(title, margin, yPosition);
+  yPosition += 15;
+  
+  // User info if provided
+  if (userInfo) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    if (userInfo.name) doc.text(`Name: ${userInfo.name}`, margin, yPosition);
+    yPosition += 6;
+    if (userInfo.targetRole) doc.text(`Target Role: ${userInfo.targetRole}`, margin, yPosition);
+    yPosition += 6;
+    if (userInfo.date) doc.text(`Analysis Date: ${userInfo.date}`, margin, yPosition);
+    yPosition += 10;
+  }
+  
+  // Separator
+  doc.setDrawColor(37, 99, 235);
+  doc.setLineWidth(0.5);
+  doc.line(margin, yPosition, pageWidth - margin, yPosition);
+  yPosition += 15;
+  
+  // Content styling
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  
+  // Process the analysis text with better formatting
+  const sections = analysis.split(/\n\s*\n/); // Split by double newlines (paragraphs)
+  
+  for (const section of sections) {
+    if (section.trim()) {
+      // Check for headers (lines that start with numbers or ### or **)
+      if (section.match(/^(#{1,3}\s|\d+\.\s|\*\*.*\*\*)/)) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(37, 99, 235);
+      } else {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+      }
+      
+      const lines = doc.splitTextToSize(section.trim(), maxLineWidth);
+      
+      for (const line of lines) {
+        if (yPosition > pageHeight - margin - 20) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        
+        doc.text(line, margin, yPosition);
+        yPosition += 6;
+      }
+      
+      yPosition += 4; // Extra space between sections
+    }
+  }
+  
+  // Footer
+  const timestamp = new Date().toLocaleString();
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Generated by CodeArena AI Assistant on ${timestamp}`, margin, pageHeight - 10);
+  doc.text('Visit: CodeArena Platform', pageWidth - margin - 40, pageHeight - 10);
+  
+  return doc;
+}
+
+export default {
+  generatePDF,
+  downloadPDF,
+  displayPDF,
+  generateAnalysisPDF
+};

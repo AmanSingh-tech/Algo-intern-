@@ -103,92 +103,174 @@ route.post('/run/:pid', async (req, res) => {
 });
 
 
-// Submission Route
-route.post('/submit/:pid',async (req,res)=>{
+// Enhanced Submission Route - Tests code against all test cases
+route.post('/submit/:pid', async (req, res) => {
+  const { pid } = req.params;
+  const { usertoken, code, language } = req.body;
 
-  const {pid}=req.params;
-  const { usertoken , code , language }=req.body;
-
-  if( !pid || !usertoken || !code || !language ){
+  if (!pid || !usertoken || !code || !language) {
     return res.json({
-      success:false,
-      msg:"Send All Data"
-    })
+      success: false,
+      msg: "Send All Data",
+      error: "Missing required parameters"
+    });
   }
-
-
-
 
   try {
-
-
-    const decode=jwt.verify(usertoken,jwtpasskey)
+    // Verify JWT token
+    const decode = jwt.verify(usertoken, jwtpasskey);
     
-    if(!decode){
+    if (!decode) {
       return res.json({
-        success:false,
-        msg:"User Id Invalid"
-      })
+        success: false,
+        msg: "User Id Invalid",
+        error: "Invalid authentication token"
+      });
     }
 
-    const uid=decode.id;
+    const uid = decode.id;
 
-    const auth_user=await prisma.user.findFirst({
-      where:{
-        id:uid
+    // Verify user exists
+    const auth_user = await prisma.user.findFirst({
+      where: { id: uid }
+    });
+
+    if (!auth_user) {
+      return res.json({
+        success: false,
+        msg: "User Does not Exist",
+        error: "User not found"
+      });
+    }
+
+    // Get problem and test cases
+    const problem = await getTestCases(pid);
+
+    if (!problem.success) {
+      return res.json({
+        success: false,
+        msg: "Problem ID is invalid",
+        error: "Problem not found or has no test cases"
+      });
+    }
+
+    const testCases = problem.testCases;
+    let passedTests = 0;
+    let totalTests = testCases.length;
+    let testResults = [];
+    let executionTime = 0;
+    let memoryUsed = 0;
+
+    // Run code against all test cases
+    for (let i = 0; i < testCases.length; i++) {
+      const test = testCases[i];
+      
+      try {
+        const startTime = Date.now();
+        const response = await axios.post(`${process.env.COMPILER_PORT}/run`, {
+          code,
+          language,
+          inputs: test.input,
+          mode: "compiler",
+        });
+        
+        const endTime = Date.now();
+        executionTime = Math.max(executionTime, endTime - startTime);
+
+        const data = response.data;
+        
+        if (data.success) {
+          const actualOutput = data.output?.trim() || "";
+          const expectedOutput = test.output?.trim() || "";
+          
+          const testPassed = actualOutput === expectedOutput;
+          
+          if (testPassed) {
+            passedTests++;
+          }
+          
+          testResults.push({
+            testCase: i + 1,
+            passed: testPassed,
+            expected: expectedOutput,
+            actual: actualOutput,
+            input: test.input,
+            executionTime: endTime - startTime
+          });
+          
+        } else {
+          // Compilation or runtime error
+          testResults.push({
+            testCase: i + 1,
+            passed: false,
+            error: data.error || "Runtime error",
+            input: test.input,
+            executionTime: endTime - startTime
+          });
+        }
+        
+      } catch (compilerError) {
+        testResults.push({
+          testCase: i + 1,
+          passed: false,
+          error: `Compiler service error: ${compilerError.message}`,
+          input: test.input,
+          executionTime: 0
+        });
       }
-    })
-
-    if(!auth_user){
-      return res.json({
-        success:false,
-        msg:"USer Donot Exist"
-      })
     }
 
-    const auth_pid=await prisma.problem.findFirst({
-      where:{
-        id:pid
+    // Determine if submission is successful
+    const isSuccessful = passedTests === totalTests;
+    const accuracy = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
+
+    // Save submission to database
+    const submission = await prisma.solve.create({
+      data: {
+        success: isSuccessful,
+        code: code,
+        language: language,
+        problemId: pid,
+        userId: uid,
+        testsPassed: passedTests,
+        totalTests: totalTests,
+        executionTime: executionTime,
+        submittedAt: new Date()
       }
-    })
+    });
 
-    if(!auth_pid){
+    if (!submission) {
       return res.json({
-        success:false,
-        msg:"Problem ID is invalid"
-      })
+        success: false,
+        msg: "Error saving submission",
+        error: "Database error"
+      });
     }
 
-    const response=await prisma.solve.create({
-      data:{
-        success:true,
-        code:code,
-        language:language,
-        problemId:pid,
-        userId:uid
-      }
-    })
-
-    if(!response){
-      return res.json({
-        success:false,
-        msg:"Error Submitting"
-      })
-    }
-
+    // Return detailed results
     return res.json({
-      success:true,
-      msg:"Submission Successfull"
-    })
+      success: true,
+      accepted: isSuccessful,
+      msg: isSuccessful ? "Submission Successful - All tests passed!" : "Submission Failed - Some tests failed",
+      results: {
+        passedTests,
+        totalTests,
+        accuracy: Math.round(accuracy * 100) / 100,
+        executionTime,
+        testResults: testResults.slice(0, 5), // Show only first 5 test results
+        status: isSuccessful ? "Accepted" : "Wrong Answer"
+      }
+    });
 
   } catch (error) {
+    console.error('Submission error:', error);
     return res.json({
-      success:false,
-      msg:error
-    })
+      success: false,
+      msg: "Submission error",
+      error: error.message
+    });
   }
-
-})
+});
 
 // Simple run endpoint for code editor (no problem ID required)
 route.post('/run', async (req, res) => {

@@ -1,6 +1,6 @@
 "use client"
 
-import { Trophy, Code, Edit, BarChart3, Briefcase, User, BookOpen, Users } from "lucide-react"
+import { Trophy, Code, Edit, BarChart3, Briefcase, User, BookOpen, Users, FileText } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -20,6 +20,7 @@ const navigation = [
   { name: "Contests", icon: Trophy, href: "/contests", color: "text-primary" },
   { name: "Practice", icon: Code, href: "/practice", color: "text-accent" },
   { name: "Code Editor", icon: Edit, href: "/code-editor", color: "text-primary" },
+  { name: "Submissions", icon: FileText, href: "/submissions", color: "text-blue-500" },
   { name: "Leaderboard", icon: BarChart3, href: "/leaderboard", color: "text-accent" },
   { name: "Internship Tracker", icon: Briefcase, href: "/internship-tracker", color: "text-primary" },
   { name: "Profile", icon: User, href: "/profile", color: "text-accent" },

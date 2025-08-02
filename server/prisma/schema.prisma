@@ -19,16 +19,20 @@ model User {
 }
 
 model Solve {
-  id        String   @id @default(uuid())
-  success   Boolean
-  error     String?
-  code      String
-  language  String   @default("cpp")
-  date      DateTime @default(now())
-  problemId String
-  userId    String
-  problem   Problem  @relation(fields: [problemId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  id            String    @id @default(uuid())
+  success       Boolean
+  error         String?
+  code          String
+  language      String    @default("cpp")
+  date          DateTime  @default(now())
+  problemId     String
+  userId        String
+  testsPassed   Int?      @default(0)
+  totalTests    Int?      @default(0)
+  executionTime Int?      @default(0)
+  submittedAt   DateTime? @default(now())
+  problem       Problem   @relation(fields: [problemId], references: [id])
+  user          User      @relation(fields: [userId], references: [id])
 }
 
 model Problem {
