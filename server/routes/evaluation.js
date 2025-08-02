@@ -19,10 +19,10 @@ router.post('/run', async (req, res) => {
     // Try to connect to the compiler service
     const compilerServiceUrl = process.env.COMPILER_SERVICE_URL || 'http://localhost:3002';
     
-    const response = await axios.post(`${compilerServiceUrl}/compile`, {
+    const response = await axios.post(`${compilerServiceUrl}/run`, {
       language: language,
       code: code,
-      input: inputs || ""
+      inputs: inputs || ""
     }, {
       timeout: 10000 // 10 second timeout
     });

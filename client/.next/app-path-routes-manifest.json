@@ -1,0 +1,18 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/code-editor/page": "/code-editor",
+  "/contests/page": "/contests",
+  "/internship-tracker/page": "/internship-tracker",
+  "/leaderboard/page": "/leaderboard",
+  "/login/page": "/login",
+  "/learn/page": "/learn",
+  "/page": "/",
+  "/peer-rooms/page": "/peer-rooms",
+  "/practice/page": "/practice",
+  "/profile/page": "/profile",
+  "/register/page": "/register",
+  "/solve/[problemId]/page": "/solve/[problemId]",
+  "/solve/code-editor/page": "/solve/code-editor",
+  "/submissions/page": "/submissions",
+  "/test-api-debug/page": "/test-api-debug"
+}

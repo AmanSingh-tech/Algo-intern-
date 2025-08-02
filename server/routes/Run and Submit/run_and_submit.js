@@ -42,7 +42,7 @@ route.post('/run/:pid', async (req, res) => {
       const test = testCases[i];
 
       try {
-        const response = await axios.post(`${process.env.COMPILER_PORT}/run`, {
+        const response = await axios.post(`${process.env.COMPILER_SERVICE_URL || 'http://localhost:3002'}/run`, {
           code,
           language,
           inputs: test.input,
@@ -167,7 +167,7 @@ route.post('/submit/:pid', async (req, res) => {
       
       try {
         const startTime = Date.now();
-        const response = await axios.post(`${process.env.COMPILER_PORT}/run`, {
+        const response = await axios.post(`${process.env.COMPILER_SERVICE_URL || 'http://localhost:3002'}/run`, {
           code,
           language,
           inputs: test.input,
@@ -284,7 +284,7 @@ route.post('/run', async (req, res) => {
   }
 
   try {
-    const response = await axios.post(`${process.env.COMPILER_PORT}/run`, {
+    const response = await axios.post(`${process.env.COMPILER_SERVICE_URL || 'http://localhost:3002'}/run`, {
       code,
       language,
       inputs,

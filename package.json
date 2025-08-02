@@ -1,10 +1,20 @@
 {
+  "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:compiler\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
     "dev:compiler": "cd Compiler && node index.js",
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install && cd ../Compiler && npm install"
+    "build": "npm run build:client",
+    "build:client": "cd client && npm run build",
+    "start": "npm run start:prod",
+    "start:prod": "concurrently \"npm run start:server\" \"npm run start:client\" \"npm run start:compiler\"",
+    "start:server": "cd server && npm start",
+    "start:client": "cd client && npm start",
+    "start:compiler": "cd Compiler && node index.js",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install && cd ../Compiler && npm install",
+    "check:deployment": "node deployment-check.js",
+    "seed:db": "cd server && node seed-problems.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -1,0 +1,136 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "dynamicRoutes": [
+    {
+      "page": "/solve/[problemId]",
+      "regex": "^/solve/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPproblemId": "nxtPproblemId"
+      },
+      "namedRegex": "^/solve/(?<nxtPproblemId>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/code-editor",
+      "regex": "^/code\\-editor(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/code\\-editor(?:/)?$"
+    },
+    {
+      "page": "/contests",
+      "regex": "^/contests(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/contests(?:/)?$"
+    },
+    {
+      "page": "/internship-tracker",
+      "regex": "^/internship\\-tracker(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/internship\\-tracker(?:/)?$"
+    },
+    {
+      "page": "/leaderboard",
+      "regex": "^/leaderboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/leaderboard(?:/)?$"
+    },
+    {
+      "page": "/learn",
+      "regex": "^/learn(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/learn(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/peer-rooms",
+      "regex": "^/peer\\-rooms(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/peer\\-rooms(?:/)?$"
+    },
+    {
+      "page": "/practice",
+      "regex": "^/practice(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/practice(?:/)?$"
+    },
+    {
+      "page": "/profile",
+      "regex": "^/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/profile(?:/)?$"
+    },
+    {
+      "page": "/register",
+      "regex": "^/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/register(?:/)?$"
+    },
+    {
+      "page": "/solve/code-editor",
+      "regex": "^/solve/code\\-editor(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/solve/code\\-editor(?:/)?$"
+    },
+    {
+      "page": "/submissions",
+      "regex": "^/submissions(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/submissions(?:/)?$"
+    },
+    {
+      "page": "/test-api-debug",
+      "regex": "^/test\\-api\\-debug(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/test\\-api\\-debug(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "RSC",
+    "varyHeader": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch",
+    "prefetchHeader": "Next-Router-Prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "Next-Router-Segment-Prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  },
+  "rewrites": []
+}
