@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset } from "@/components/ui/sidebar"
@@ -40,7 +40,7 @@ interface Problem {
   memoryLimit?: string
 }
 
-export default function SolveCodeEditorPage() {
+function CodeEditorContent() {
   const searchParams = useSearchParams()
   const problemId = searchParams.get('problemId')
   
@@ -520,5 +520,13 @@ ${functionName}();`
         </main>
       </SidebarInset>
     </div>
+  )
+}
+
+export default function SolveCodeEditorPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+      <CodeEditorContent />
+    </Suspense>
   )
 }

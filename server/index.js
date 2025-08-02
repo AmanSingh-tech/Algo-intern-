@@ -25,19 +25,19 @@ app.get('/',(req,res)=>{
 })
 app.use('/new/user', userauthroute);
 app.use('/user',userProfileroute)
-app.use('/api',problemsroute);
-app.use('/evaluate',problemsolveroute);
+app.use('/new/problems',problemsroute);
+app.use('/new/evaluation',problemsolveroute);
 app.use('/ai',AiResponseroute);
 app.use('/internship-ai',InternshipAiroute);
 
 // Leaderboard routes
-app.get('/leaderboard', getLeaderboard);
-app.get('/leaderboard/stats', getLeaderboardStats);
+app.get('/new/user/leaderboard', getLeaderboard);
+app.get('/new/user/leaderboard-stats', getLeaderboardStats);
 
 // Submission routes
-app.post('/submissions', getUserSubmissions);
-app.post('/submissions/:submissionId', getSubmissionDetails);
-app.get('/problems/:problemId/leaderboard', getProblemLeaderboard);
+app.get('/new/user/submissions', getUserSubmissions);
+app.get('/new/user/submission/:submissionId', getSubmissionDetails);
+app.get('/new/user/leaderboard/problem/:problemId', getProblemLeaderboard);
 
 // Test endpoint
 app.get('/test-submissions', async (req, res) => {

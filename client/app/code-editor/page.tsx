@@ -125,7 +125,7 @@ export default function CodeEditorPage() {
       // Try backend evaluation service
       let response;
       try {
-        response = await fetch("http://localhost:8000/evaluate/run", {
+        response = await fetch("http://localhost:8000/new/evaluation/run", {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",

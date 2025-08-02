@@ -12,15 +12,21 @@ const jwtpasskey = process.env.JWT_PASSKEY;
 export async function getUserSubmissions(req, res) {
   try {
     console.log('getUserSubmissions called');
-    const { usertoken } = req.body;
+    console.log('Request headers:', req.headers);
     
-    if (!usertoken) {
-      console.log('No usertoken provided');
+    // Get token from header instead of body for GET request
+    const authHeader = req.headers.usertoken;
+    
+    if (!authHeader) {
+      console.log('No usertoken provided in headers');
       return res.status(400).json({
         success: false,
         error: 'Authentication token required'
       });
     }
+
+    // Remove 'Bearer ' prefix if present
+    const usertoken = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : authHeader;
 
     console.log('Verifying JWT token...');
     // Verify JWT token
@@ -89,14 +95,19 @@ export async function getUserSubmissions(req, res) {
 export async function getSubmissionDetails(req, res) {
   try {
     const { submissionId } = req.params;
-    const { usertoken } = req.body;
-
-    if (!usertoken) {
+    
+    // Get token from header instead of body for GET request
+    const authHeader = req.headers.usertoken;
+    
+    if (!authHeader) {
       return res.status(400).json({
         success: false,
         error: 'Authentication token required'
       });
     }
+
+    // Remove 'Bearer ' prefix if present
+    const usertoken = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : authHeader;
 
     // Verify JWT token
     const decode = jwt.verify(usertoken, jwtpasskey);

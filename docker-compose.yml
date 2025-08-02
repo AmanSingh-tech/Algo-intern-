@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: algotask
+      POSTGRES_USER: algotask_user
+      POSTGRES_PASSWORD: algotask_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/prisma/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U algotask_user -d algotask"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend Server
+  server:
+    build: ./server
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://algotask_user:algotask_password@postgres:5432/algotask
+      JWT_PASSKEY: your-super-secret-jwt-key-change-this-in-production
+      SALT_ROUNDS: 10
+      GOOGLE_GEMINI_API_KEY: your-google-gemini-api-key
+    ports:
+      - "8000:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    command: ["sh", "-c", "npx prisma migrate deploy && node index.js"]
+
+  # Code Compiler Service
+  compiler:
+    build: ./Compiler
+    environment:
+      PORT: 3002
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./Compiler:/app
+      - /app/node_modules
+
+  # Frontend (for development)
+  frontend:
+    build: 
+      context: ./client
+      dockerfile: Dockerfile.dev
+    environment:
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - server
+      - compiler
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    driver: bridge

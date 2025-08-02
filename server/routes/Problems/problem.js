@@ -43,7 +43,50 @@ route.get('/problem/:id', async (req, res) => {
                   orderBy:{
                     id:'asc'
                   },
-                  take:2
+                  take:2  // Only first 2 for problem preview
+                },
+                comments: true,
+                tags:{
+                  include:{
+                    tag:true
+                  }
+                }
+            }
+        });
+
+        if (!problem) {
+            return res.status(404).json({
+                success: false,
+                message: 'Problem not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            problem: problem
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Get a single problem with all test cases (for solving)
+route.get('/problem/:id/full', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const problem = await prisma.problem.findUnique({
+            where: { id: id },
+            include: {
+                testCases: {
+                  orderBy:{
+                    id:'asc'
+                  }
+                  // No limit - get all test cases
                 },
                 comments: true,
                 tags:{
