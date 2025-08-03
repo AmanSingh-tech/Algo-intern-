@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Search, Clock, Users, Trophy, CheckCircle, Code, BookOpen, Target, Zap, Brain, Plus } from "lucide-react"
+import { Search, Clock, Users, Trophy, CheckCircle, Code, BookOpen, Target, Zap, Brain, Plus, FileText, Play, Heart, Share2 } from "lucide-react"
 import { createProblem, getProblems } from "@/lib/api"
 
 // Interface for problem structure
@@ -28,6 +28,9 @@ interface Problem {
   timeLimit: string
   memoryLimit: string
   solved: boolean
+  inputtype?: string
+  totalsubmissions?: number
+  createdat?: string
 }
 
 // Static problems data to avoid import issues
@@ -213,6 +216,19 @@ export default function PracticePage() {
     }
   }
 
+  const getDifficultyVariant = (difficulty: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (difficulty) {
+      case "Easy":
+        return "default"
+      case "Medium":
+        return "secondary"
+      case "Hard":
+        return "destructive"
+      default:
+        return "outline"
+    }
+  }
+
   const getDifficultyIcon = (difficulty: string) => {
     switch (difficulty) {
       case "Easy":
@@ -245,7 +261,22 @@ export default function PracticePage() {
 
     setIsSubmitting(true)
     try {
-      const result = await createProblem(formData)
+      // Create the problem data with required fields
+      const problemData = {
+        title: formData.title,
+        description: formData.description,
+        difficulty: formData.difficulty,
+        tags: formData.inputtype ? [formData.inputtype] : ["General"], // Convert inputtype to tags
+        testCases: [
+          {
+            input: "1 2",
+            output: "3"
+          }
+        ], // Default test case
+        token: localStorage.getItem('token') || '' // Get auth token
+      }
+
+      const result = await createProblem(problemData)
       if (result.success) {
         alert("Problem created successfully!")
         setIsDialogOpen(false)
@@ -303,321 +334,405 @@ export default function PracticePage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <>
       <AppSidebar />
-      <SidebarInset className="flex-1 flex flex-col">
+      <SidebarInset>
         <Header />
-        <main className="flex-1 overflow-auto p-6">
-          {/* Header Section */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <Code className="w-8 h-8 text-blue-600" />
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Practice Problems</h1>
-              </div>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Problem
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Add New Problem</DialogTitle>
-                    <DialogDescription>
-                      Create a new coding problem for the practice platform.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="title">Title *</Label>
-                      <Input
-                        id="title"
-                        placeholder="Enter problem title"
-                        value={formData.title}
-                        onChange={(e) => handleFormChange("title", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="description">Description *</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Enter problem description"
-                        rows={6}
-                        value={formData.description}
-                        onChange={(e) => handleFormChange("description", e.target.value)}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+        <main className="flex-1 p-6 lg:p-8 bg-gradient-main min-h-screen">
+          <div className="w-full">
+            {/* Header Section */}
+            <div className="mb-12">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h1 className="text-5xl font-black mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                    Practice Problems
+                  </h1>
+                  <p className="text-xl text-muted-foreground max-w-2xl">
+                    Sharpen your coding skills with our curated collection of algorithmic challenges
+                  </p>
+                </div>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="btn-primary text-primary-foreground font-semibold px-8 py-3 rounded-2xl shadow-lg">
+                      <Plus className="w-5 h-5 mr-2" />
+                      Add Problem
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Add New Problem</DialogTitle>
+                      <DialogDescription>
+                        Create a new coding problem for the practice platform.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
                       <div>
-                        <Label htmlFor="difficulty">Difficulty *</Label>
-                        <Select value={formData.difficulty} onValueChange={(value) => handleFormChange("difficulty", value)}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select difficulty" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Easy">Easy</SelectItem>
-                            <SelectItem value="Medium">Medium</SelectItem>
-                            <SelectItem value="Hard">Hard</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="inputtype">Input Type</Label>
+                        <Label htmlFor="title">Title *</Label>
                         <Input
-                          id="inputtype"
-                          placeholder="e.g., Array, String, etc."
-                          value={formData.inputtype}
-                          onChange={(e) => handleFormChange("inputtype", e.target.value)}
+                          id="title"
+                          placeholder="Enter problem title"
+                          value={formData.title}
+                          onChange={(e) => handleFormChange("title", e.target.value)}
                         />
                       </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="constraint">Constraints</Label>
-                      <Textarea
-                        id="constraint"
-                        placeholder="Enter problem constraints"
-                        rows={3}
-                        value={formData.constraint}
-                        onChange={(e) => handleFormChange("constraint", e.target.value)}
-                      />
-                    </div>
-                    <div className="flex gap-2 justify-end">
-                      <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button 
-                        onClick={handleAddProblem} 
-                        disabled={isSubmitting}
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        {isSubmitting ? "Creating..." : "Create Problem"}
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <p className="text-gray-600 dark:text-gray-400">
-              Sharpen your coding skills with our curated collection of algorithmic challenges
-            </p>
-          </div>
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium opacity-90">Total Problems</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5" />
-                  <span className="text-2xl font-bold">{stats.total}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium opacity-90">Solved</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="text-2xl font-bold">{stats.solved}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium opacity-90">Easy</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
-                  <span className="text-2xl font-bold">{stats.easy}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium opacity-90">Medium</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <Target className="w-5 h-5" />
-                  <span className="text-2xl font-bold">{stats.medium}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium opacity-90">Hard</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <Brain className="w-5 h-5" />
-                  <span className="text-2xl font-bold">{stats.hard}</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Filters Section */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="w-5 h-5" />
-                Find Problems
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Search problems or tags..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Difficulty</label>
-                  <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Difficulties" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Difficulties</SelectItem>
-                      <SelectItem value="Easy">Easy</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="Hard">Hard</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {getUniqueCategories().map(category => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Problems Grid */}
-          <div className="grid gap-4">
-            {filteredProblems.length === 0 ? (
-              <Card className="p-12 text-center">
-                <div className="text-gray-400 mb-4">
-                  <Search className="w-16 h-16 mx-auto" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                  No problems found
-                </h3>
-                <p className="text-gray-500 dark:text-gray-500">
-                  Try adjusting your search criteria or filters
-                </p>
-              </Card>
-            ) : (
-              filteredProblems.map((problem) => (
-                <Card key={problem.id} className="hover:shadow-lg transition-shadow duration-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          {problem.solved && (
-                            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                          )}
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                            {problem.title}
-                          </h3>
+                      <div>
+                        <Label htmlFor="description">Description *</Label>
+                        <Textarea
+                          id="description"
+                          placeholder="Enter problem description"
+                          rows={6}
+                          value={formData.description}
+                          onChange={(e) => handleFormChange("description", e.target.value)}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="difficulty">Difficulty *</Label>
+                          <Select value={formData.difficulty} onValueChange={(value) => handleFormChange("difficulty", value)}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select difficulty" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Easy">Easy</SelectItem>
+                              <SelectItem value="Medium">Medium</SelectItem>
+                              <SelectItem value="Hard">Hard</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-
-                        <div className="flex items-center gap-4 mb-3">
-                          <Badge className={`flex items-center gap-1 ${getDifficultyColor(problem.difficulty)}`}>
-                            {getDifficultyIcon(problem.difficulty)}
-                            {problem.difficulty}
-                          </Badge>
-
-                          <Badge variant="secondary" className="flex items-center gap-1">
-                            <BookOpen className="w-3 h-3" />
-                            {problem.category}
-                          </Badge>
-
-                          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                            <Users className="w-4 h-4" />
-                            <span>{problem.acceptance}</span>
-                          </div>
-
-                          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                            <Clock className="w-4 h-4" />
-                            <span>{problem.timeLimit}</span>
-                          </div>
-                        </div>
-
-                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
-                          {problem.description.slice(0, 150)}...
-                        </p>
-
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {problem.tags.slice(0, 4).map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                          {problem.tags.length > 4 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{problem.tags.length - 4} more
-                            </Badge>
-                          )}
+                        <div>
+                          <Label htmlFor="inputtype">Input Type</Label>
+                          <Input
+                            id="inputtype"
+                            placeholder="e.g., Array, String, etc."
+                            value={formData.inputtype}
+                            onChange={(e) => handleFormChange("inputtype", e.target.value)}
+                          />
                         </div>
                       </div>
-
-                      <div className="ml-4 flex flex-col gap-2">
+                      <div>
+                        <Label htmlFor="constraint">Constraints</Label>
+                        <Textarea
+                          id="constraint"
+                          placeholder="Enter problem constraints"
+                          rows={3}
+                          value={formData.constraint}
+                          onChange={(e) => handleFormChange("constraint", e.target.value)}
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                          Cancel
+                        </Button>
                         <Button 
-                          onClick={() => handleSolveProblem(problem.id)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+                          onClick={handleAddProblem} 
+                          disabled={isSubmitting}
+                          className="btn-primary"
                         >
-                          <Code className="w-4 h-4 mr-2" />
-                          Solve
+                          {isSubmitting ? "Creating..." : "Create Problem"}
                         </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-12">
+              <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all rounded-3xl feature-card dark:glow-blue">
+                <CardHeader>
+                  <CardTitle className="text-foreground flex items-center font-bold">
+                    <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center mr-4">
+                      <BookOpen className="w-6 h-6 text-primary" />
+                    </div>
+                    Total Problems
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-black text-primary">{stats.total}</div>
+                  <div className="text-sm text-muted-foreground mt-1">Available challenges</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all rounded-3xl feature-card dark:glow-green">
+                <CardHeader>
+                  <CardTitle className="text-foreground flex items-center font-bold">
+                    <div className="w-12 h-12 bg-green-500/20 rounded-2xl flex items-center justify-center mr-4">
+                      <CheckCircle className="w-6 h-6 text-green-500" />
+                    </div>
+                    Solved
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-black text-green-500">{stats.solved}</div>
+                  <div className="text-sm text-muted-foreground mt-1">Completed problems</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all rounded-3xl feature-card">
+                <CardHeader>
+                  <CardTitle className="text-foreground flex items-center font-bold">
+                    <div className="w-12 h-12 bg-green-500/20 rounded-2xl flex items-center justify-center mr-4">
+                      <Zap className="w-6 h-6 text-green-500" />
+                    </div>
+                    Easy
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-black text-green-500">{stats.easy}</div>
+                  <div className="text-sm text-muted-foreground mt-1">Beginner friendly</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all rounded-3xl feature-card">
+                <CardHeader>
+                  <CardTitle className="text-foreground flex items-center font-bold">
+                    <div className="w-12 h-12 bg-yellow-500/20 rounded-2xl flex items-center justify-center mr-4">
+                      <Target className="w-6 h-6 text-yellow-500" />
+                    </div>
+                    Medium
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-black text-yellow-500">{stats.medium}</div>
+                  <div className="text-sm text-muted-foreground mt-1">Intermediate level</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all rounded-3xl feature-card">
+                <CardHeader>
+                  <CardTitle className="text-foreground flex items-center font-bold">
+                    <div className="w-12 h-12 bg-red-500/20 rounded-2xl flex items-center justify-center mr-4">
+                      <Brain className="w-6 h-6 text-red-500" />
+                    </div>
+                    Hard
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-black text-red-500">{stats.hard}</div>
+                  <div className="text-sm text-muted-foreground mt-1">Expert challenges</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Filters Section */}
+            <Card className="bg-card/90 backdrop-blur-sm border-2 border-border shadow-lg rounded-3xl feature-card mb-8">
+              <CardHeader className="p-8">
+                <CardTitle className="text-foreground flex items-center font-bold text-2xl">
+                  <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center mr-4">
+                    <Search className="w-6 h-6 text-primary" />
+                  </div>
+                  Find Problems
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-8 pb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-foreground">Search</label>
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                      <Input
+                        placeholder="Search problems or tags..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-12 h-12 rounded-2xl border-2 bg-background/50"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-foreground">Difficulty</label>
+                    <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                      <SelectTrigger className="h-12 rounded-2xl border-2 bg-background/50">
+                        <SelectValue placeholder="All Difficulties" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Difficulties</SelectItem>
+                        <SelectItem value="Easy">Easy</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="Hard">Hard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-foreground">Category</label>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="h-12 rounded-2xl border-2 bg-background/50">
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {getUniqueCategories().map(category => (
+                          <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Problems Grid */}
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  <p className="text-lg text-muted-foreground">Loading practice problems...</p>
+                </div>
+              </div>
+            ) : filteredProblems.length === 0 ? (
+              <Card className="bg-card/80 backdrop-blur-sm border-2 border-border shadow-lg rounded-3xl feature-card">
+                <CardContent className="text-center py-16">
+                  <div className="w-24 h-24 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Search className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">No Problems Found</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    {problems.length === 0 
+                      ? "No problems available yet. Add some problems to get started!"
+                      : "Try adjusting your search criteria or browse all problems."
+                    }
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-6">
+                {filteredProblems.map((problem) => (
+                  <Card 
+                    key={problem.id} 
+                    className="bg-card/90 backdrop-blur-sm border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 rounded-3xl feature-card group cursor-pointer"
+                    onClick={() => window.open(`/solve/${problem.id}`, '_blank')}
+                  >
+                    <CardContent className="p-8">
+                      <div className="flex items-start justify-between mb-6">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Badge 
+                              variant={getDifficultyVariant(problem.difficulty)}
+                              className="px-4 py-2 text-sm font-semibold rounded-full"
+                            >
+                              {problem.difficulty}
+                            </Badge>
+                            <div className="text-sm text-muted-foreground font-medium">
+                              Problem #{problem.id}
+                            </div>
+                          </div>
+                          <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
+                            {problem.title}
+                          </h3>
+                          <p className="text-muted-foreground leading-relaxed text-base line-clamp-3">
+                            {problem.description}
+                          </p>
+                        </div>
+                        
+                        <div className="flex items-center gap-3 ml-6">
+                          <div className="text-right space-y-2">
+                            <div className="text-sm text-muted-foreground">Solved by</div>
+                            <div className="text-2xl font-bold text-primary">
+                              {problem.totalsubmissions || 0}
+                            </div>
+                          </div>
+                          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
+                            <Code className="w-8 h-8 text-primary" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Problem Details */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-border">
+                        {problem.inputtype && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                              <FileText className="w-5 h-5 text-blue-500" />
+                            </div>
+                            <div>
+                              <div className="text-sm text-muted-foreground">Input Type</div>
+                              <div className="font-semibold text-foreground">{problem.inputtype}</div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
+                            <Users className="w-5 h-5 text-green-500" />
+                          </div>
+                          <div>
+                            <div className="text-sm text-muted-foreground">Submissions</div>
+                            <div className="font-semibold text-foreground">
+                              {problem.totalsubmissions || 0}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                            <Clock className="w-5 h-5 text-purple-500" />
+                          </div>
+                          <div>
+                            <div className="text-sm text-muted-foreground">Added</div>
+                            <div className="font-semibold text-foreground">
+                              {problem.createdat ? new Date(problem.createdat).toLocaleDateString() : 'Recently'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-4 mt-6 pt-6 border-t border-border">
+                        <Button 
+                          className="btn-primary flex-1 h-12 rounded-2xl font-semibold"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`/solve/${problem.id}`, '_blank');
+                          }}
+                        >
+                          <Play className="w-5 h-5 mr-2" />
+                          Solve Problem
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-12 w-12 rounded-2xl border-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Add to favorites functionality
+                          }}
+                        >
+                          <Heart className="w-5 h-5" />
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-12 w-12 rounded-2xl border-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Share functionality
+                          }}
+                        >
+                          <Share2 className="w-5 h-5" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Problems Count */}
+            {filteredProblems.length > 0 && (
+              <div className="mt-12 text-center">
+                <p className="text-muted-foreground text-lg">
+                  Showing <span className="font-bold text-primary">{filteredProblems.length}</span> of{' '}
+                  <span className="font-bold text-primary">{problems.length}</span> problems
+                </p>
+              </div>
             )}
           </div>
-
-          {/* Load More or Pagination could go here */}
-          {filteredProblems.length > 0 && (
-            <div className="mt-8 text-center">
-              <p className="text-gray-500 dark:text-gray-400">
-                Showing {filteredProblems.length} of {problems.length} problems
-              </p>
-            </div>
-          )}
         </main>
       </SidebarInset>
-    </div>
-  )
+    </>
+  );
 }

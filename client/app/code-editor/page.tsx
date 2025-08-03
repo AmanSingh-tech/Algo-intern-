@@ -228,21 +228,31 @@ export default function CodeEditorPage() {
       <AppSidebar />
       <SidebarInset>
         <Header />
-        <main className="flex-1 bg-gray-900 min-h-screen">
+        <main className="flex-1 bg-gradient-to-br from-black via-gray-900 to-black min-h-screen">
           <div className="w-full h-full">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-0 h-[calc(100vh-80px)]">
-              <div className="lg:col-span-3 border-r border-gray-700">
-                {/* LeetCode-style Editor Header */}
-                <div className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700">
+              <div className="lg:col-span-3 border-r border-purple-500/20">
+                {/* Modern Editor Header */}
+                <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-900 via-black to-gray-900 border-b border-purple-500/30 backdrop-blur-sm">
                   <div className="flex items-center space-x-4">
-                    <span className="text-sm font-medium text-gray-300">Language:</span>
+                    <span className="text-sm font-medium text-cyan-300">Language:</span>
                     <Select value={language} onValueChange={setLanguage}>
-                      <SelectTrigger className="w-32 h-8 bg-gray-700 border border-gray-600 rounded text-sm text-white">
+                      <SelectTrigger className="w-32 h-8 bg-gradient-to-r from-purple-900/50 to-blue-900/50 border border-purple-500/50 rounded-lg text-sm text-white shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-all">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-700 border border-gray-600 rounded">
-                        <SelectItem value="cpp" className="text-white hover:bg-gray-600">C++</SelectItem>
-                        <SelectItem value="c" className="text-white hover:bg-gray-600">C</SelectItem>
+                      <SelectContent className="bg-gray-900 border border-purple-500/50 rounded-lg backdrop-blur-md">
+                        <SelectItem value="cpp" className="text-white hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-blue-600/30">
+                          <span className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                            C++
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="c" className="text-white hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-blue-600/30">
+                          <span className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                            C
+                          </span>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -251,7 +261,7 @@ export default function CodeEditorPage() {
                       size="sm"
                       variant="outline"
                       onClick={resetEditor}
-                      className="h-8 px-3 text-xs bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                      className="h-8 px-3 text-xs bg-gradient-to-r from-red-600/20 to-pink-600/20 border-red-500/50 text-red-300 hover:bg-gradient-to-r hover:from-red-600/40 hover:to-pink-600/40 hover:border-red-400 transition-all shadow-lg shadow-red-500/20"
                     >
                       Reset
                     </Button>
@@ -259,7 +269,7 @@ export default function CodeEditorPage() {
                       size="sm"
                       onClick={runCode}
                       disabled={loading}
-                      className="h-8 px-4 text-xs bg-green-600 hover:bg-green-700 text-white border-none"
+                      className="h-8 px-4 text-xs bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white border-none shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all transform hover:scale-105"
                     >
                       <Play className="w-3 h-3 mr-1" />
                       {loading ? "Running..." : "Run"}
@@ -267,15 +277,16 @@ export default function CodeEditorPage() {
                   </div>
                 </div>
 
-                {/* LeetCode-style Code Editor */}
-                <div className="h-[calc(100%-48px)] bg-gray-900">
-                  <div className="h-full p-0">
+                {/* Modern Code Editor */}
+                <div className="h-[calc(100%-48px)] bg-gradient-to-br from-black via-gray-900 to-black relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-900/5 via-transparent to-blue-900/5"></div>
+                  <div className="h-full p-0 relative z-10">
                     {/* Line numbers and code area */}
                     <div className="h-full flex">
                       {/* Line numbers */}
-                      <div className="bg-gray-800 border-r border-gray-700 px-3 py-4 min-w-[50px]">
+                      <div className="bg-gradient-to-b from-gray-900 via-black to-gray-900 border-r border-purple-500/30 px-3 py-4 min-w-[50px] backdrop-blur-sm">
                         {code.split('\n').map((_, index) => (
-                          <div key={index} className="text-xs text-gray-500 leading-6 text-right font-mono">
+                          <div key={index} className="text-xs text-cyan-400/80 leading-6 text-right font-mono hover:text-cyan-300 transition-colors">
                             {index + 1}
                           </div>
                         ))}
@@ -286,7 +297,7 @@ export default function CodeEditorPage() {
                           value={code}
                           onChange={(e) => setCode(e.target.value)}
                           placeholder="// Start coding here..."
-                          className="w-full h-full bg-gray-900 text-gray-100 placeholder-gray-500 border-none outline-none resize-none font-mono text-sm leading-6 p-4"
+                          className="w-full h-full bg-transparent text-gray-100 placeholder-purple-400/50 border-none outline-none resize-none font-mono text-sm leading-6 p-4 selection:bg-purple-500/30"
                           spellCheck="false"
                           style={{
                             fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace",
@@ -300,81 +311,97 @@ export default function CodeEditorPage() {
                 </div>
               </div>
 
-              {/* LeetCode-style Right Panel */}
-              <div className="bg-gray-800 flex flex-col">
-                {/* Tabs for Input/Output */}
-                <div className="flex border-b border-gray-700">
-                  <button className="px-4 py-3 text-sm font-medium text-white border-b-2 border-blue-500 bg-gray-700">
-                    Input
-                  </button>
-                  <button className="px-4 py-3 text-sm font-medium text-gray-400 hover:text-gray-300">
-                    Output
-                  </button>
-                </div>
-
-                {/* Input Section */}
-                <div className="p-4 border-b border-gray-700">
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                      Custom Input
-                    </label>
-                    <textarea
-                      placeholder="Enter your input here..."
-                      className="w-full h-24 p-3 text-sm font-mono bg-gray-900 border border-gray-600 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500"
-                      value={inputs}
-                      onChange={(e) => setInputs(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Output Section */}
-                <div className="flex-1 p-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              {/* Modern Right Panel */}
+              <div className="bg-gradient-to-b from-gray-900 via-black to-gray-900 flex flex-col relative">
+                <div className="absolute inset-0 bg-gradient-to-l from-purple-900/10 via-transparent to-blue-900/10"></div>
+                <div className="relative z-10 flex flex-col h-full">
+                  {/* Colorful Tabs */}
+                  <div className="flex border-b border-purple-500/30">
+                    <button className="px-4 py-3 text-sm font-medium text-white border-b-2 border-cyan-400 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 shadow-lg shadow-cyan-500/20">
+                      <span className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                        Input
+                      </span>
+                    </button>
+                    <button className="px-4 py-3 text-sm font-medium text-purple-300 hover:text-white hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-blue-600/20 transition-all">
+                      <span className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
                         Output
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Enhanced Input Section */}
+                  <div className="p-4 border-b border-purple-500/30">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-cyan-300 uppercase tracking-wide flex items-center gap-2">
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                        Custom Input
                       </label>
-                      {executionTime !== null && (
-                        <span className="text-xs text-gray-500">
-                          Runtime: {executionTime}ms
-                        </span>
-                      )}
-                    </div>
-                    <div className="bg-gray-900 border border-gray-600 rounded p-3 min-h-32 max-h-64 overflow-y-auto">
-                      <pre className={`text-sm font-mono whitespace-pre-wrap ${
-                        output.includes('❌') 
-                          ? 'text-red-400' 
-                          : output.includes('✅') 
-                          ? 'text-green-400' 
-                          : 'text-gray-100'
-                      }`}>
-                        {output}
-                      </pre>
+                      <textarea
+                        placeholder="Enter your input here..."
+                        className="w-full h-24 p-3 text-sm font-mono bg-gradient-to-br from-gray-900 to-black border border-purple-500/50 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400/50 text-white placeholder-purple-400/60 shadow-inner transition-all"
+                        value={inputs}
+                        onChange={(e) => setInputs(e.target.value)}
+                      />
                     </div>
                   </div>
-                </div>
 
-                {/* Stats Section */}
-                <div className="p-4 border-t border-gray-700 bg-gray-700">
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                      Code Stats
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="text-gray-400">
-                        Language: <span className="font-medium text-gray-300">{language.toUpperCase()}</span>
+                  {/* Enhanced Output Section */}
+                  <div className="flex-1 p-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium text-green-300 uppercase tracking-wide flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                          Output
+                        </label>
+                        {executionTime !== null && (
+                          <span className="text-xs text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded-full border border-yellow-400/30">
+                            ⚡ {executionTime}ms
+                          </span>
+                        )}
                       </div>
-                      <div className="text-gray-400">
-                        Lines: <span className="font-medium text-gray-300">{code.split('\n').length}</span>
+                      <div className="bg-gradient-to-br from-gray-900 to-black border border-purple-500/50 rounded-lg p-3 min-h-32 max-h-64 overflow-y-auto shadow-inner">
+                        <pre className={`text-sm font-mono whitespace-pre-wrap ${
+                          output.includes('❌') 
+                            ? 'text-red-400' 
+                            : output.includes('✅') 
+                            ? 'text-green-400' 
+                            : 'text-gray-100'
+                        }`}>
+                          {output}
+                        </pre>
                       </div>
-                      <div className="text-gray-400">
-                        Characters: <span className="font-medium text-gray-300">{code.length}</span>
-                      </div>
-                      {executionTime && (
-                        <div className="text-gray-400">
-                          Runtime: <span className="font-medium text-green-400">{executionTime}ms</span>
+                    </div>
+                  </div>
+
+                  {/* Enhanced Stats Section */}
+                  <div className="p-4 border-t border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-blue-900/20 backdrop-blur-sm">
+                    <div className="space-y-2">
+                      <h3 className="text-xs font-medium text-purple-300 uppercase tracking-wide flex items-center gap-2">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        Code Stats
+                      </h3>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="text-gray-400 flex items-center gap-1">
+                          <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                          Language: <span className="font-medium text-blue-300">{language.toUpperCase()}</span>
                         </div>
-                      )}
+                        <div className="text-gray-400 flex items-center gap-1">
+                          <div className="w-1 h-1 bg-cyan-400 rounded-full"></div>
+                          Lines: <span className="font-medium text-cyan-300">{code.split('\n').length}</span>
+                        </div>
+                        <div className="text-gray-400 flex items-center gap-1">
+                          <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
+                          Characters: <span className="font-medium text-purple-300">{code.length}</span>
+                        </div>
+                        {executionTime && (
+                          <div className="text-gray-400 flex items-center gap-1">
+                            <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
+                            Runtime: <span className="font-medium text-green-400">{executionTime}ms</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -9,8 +9,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import CodeEditor from "@/components/code-editor"
-import { Loader2, Play, RotateCcw, Clock, MemoryStick, CheckCircle, AlertTriangle, Lightbulb } from "lucide-react"
+import { 
+  Loader2, 
+  Play, 
+  RotateCcw, 
+  Clock, 
+  MemoryStick, 
+  CheckCircle, 
+  AlertTriangle, 
+  Lightbulb,
+  Trophy,
+  Users,
+  Building,
+  Code,
+  Terminal,
+  Bug,
+  Send,
+  ThumbsUp,
+  ThumbsDown,
+  Star,
+  Share2,
+  BookOpen,
+  Zap,
+  Target,
+  Brain
+} from "lucide-react"
 
 interface Problem {
   id: string
@@ -237,10 +265,25 @@ export default function SolvePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showHints, setShowHints] = useState(false)
+  const [selectedLanguage, setSelectedLanguage] = useState("cpp")
+  const [code, setCode] = useState("")
+  const [isRunning, setIsRunning] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [testResults, setTestResults] = useState<any[]>([])
+  const [activeTab, setActiveTab] = useState("description")
+  const [isLiked, setIsLiked] = useState(false)
+  const [isDisliked, setIsDisliked] = useState(false)
+  const [isFavorited, setIsFavorited] = useState(false)
 
   useEffect(() => {
     loadProblem()
   }, [problemId])
+
+  useEffect(() => {
+    if (problem) {
+      setCode(getLanguageTemplate(selectedLanguage, problem))
+    }
+  }, [problem, selectedLanguage])
 
   const loadProblem = () => {
     try {
@@ -260,39 +303,133 @@ export default function SolvePage() {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Easy":
-        return "text-green-400 border-green-500/30 bg-green-500/10"
+        return "text-green-500 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
       case "Medium":
-        return "text-yellow-400 border-yellow-500/30 bg-yellow-500/10"
+        return "text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
       case "Hard":
-        return "text-red-400 border-red-500/30 bg-red-500/10"
+        return "text-red-500 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
       default:
-        return "text-gray-400 border-gray-500/30 bg-gray-500/10"
+        return "text-gray-500 bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800"
     }
   }
 
-  const getDefaultCodeTemplate = (problem: Problem) => {
-    return `#include <iostream>
+  const getDifficultyIcon = (difficulty: string) => {
+    switch (difficulty) {
+      case "Easy":
+        return <Zap className="w-4 h-4" />
+      case "Medium":
+        return <Target className="w-4 h-4" />
+      case "Hard":
+        return <Brain className="w-4 h-4" />
+      default:
+        return <Code className="w-4 h-4" />
+    }
+  }
+
+  const getLanguageTemplate = (language: string, problem: Problem) => {
+    const templates = {
+      cpp: `#include <iostream>
 #include <vector>
 #include <algorithm>
 using namespace std;
 
-/*
-Problem: ${problem.title}
-Difficulty: ${problem.difficulty}
-Category: ${problem.category}
-
-Description:
-${problem.description.split('\n')[0]}...
-
-Time Limit: ${problem.timeLimit}
-Memory Limit: ${problem.memoryLimit}
-*/
+class Solution {
+public:
+    // TODO: Implement your solution here
+    int twoSum(vector<int>& nums, int target) {
+        
+    }
+};
 
 int main() {
-    // Your solution here
+    Solution solution;
+    // Test your solution here
+    vector<int> nums = {2, 7, 11, 15};
+    int target = 9;
+    
+    int result = solution.twoSum(nums, target);
+    cout << result << endl;
     
     return 0;
+}`,
+      python: `class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        # TODO: Implement your solution here
+        pass
+
+# Test your solution
+if __name__ == "__main__":
+    solution = Solution()
+    nums = [2, 7, 11, 15]
+    target = 9
+    
+    result = solution.twoSum(nums, target)
+    print(result)`,
+      javascript: `/**
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number[]}
+ */
+var twoSum = function(nums, target) {
+    // TODO: Implement your solution here
+    
+};
+
+// Test your solution
+const nums = [2, 7, 11, 15];
+const target = 9;
+
+const result = twoSum(nums, target);
+console.log(result);`,
+      java: `class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        // TODO: Implement your solution here
+        
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Solution solution = new Solution();
+        int[] nums = {2, 7, 11, 15};
+        int target = 9;
+        
+        int[] result = solution.twoSum(nums, target);
+        System.out.println(Arrays.toString(result));
+    }
 }`
+    }
+    return templates[language as keyof typeof templates] || templates.cpp
+  }
+
+  const handleLanguageChange = (language: string) => {
+    setSelectedLanguage(language)
+    if (problem) {
+      setCode(getLanguageTemplate(language, problem))
+    }
+  }
+
+  const handleRunCode = async () => {
+    setIsRunning(true)
+    // Simulate API call
+    setTimeout(() => {
+      setTestResults([
+        { id: 1, input: "[2,7,11,15], 9", expected: "[0,1]", actual: "[0,1]", status: "passed", time: "0ms", memory: "41.2MB" },
+        { id: 2, input: "[3,2,4], 6", expected: "[1,2]", actual: "[1,2]", status: "passed", time: "0ms", memory: "41.4MB" },
+        { id: 3, input: "[3,3], 6", expected: "[0,1]", actual: "[0,1]", status: "passed", time: "0ms", memory: "41.1MB" }
+      ])
+      setIsRunning(false)
+      setActiveTab("testcase")
+    }, 2000)
+  }
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    // Simulate submission
+    setTimeout(() => {
+      setIsSubmitting(false)
+      setActiveTab("result")
+    }, 3000)
   }
 
   if (loading) {
@@ -339,182 +476,260 @@ int main() {
   }
 
   return (
-    <div className="flex h-screen">
+    <>
       <AppSidebar />
-      <SidebarInset className="flex-1 flex flex-col">
+      <SidebarInset>
         <Header />
-        <main className="flex-1 flex">
-          {/* Problem Description Panel - Left Side */}
-          <div className="w-1/2 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-900">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {problem.title}
-                </h1>
-                <Badge className={getDifficultyColor(problem.difficulty)}>
-                  {problem.difficulty}
-                </Badge>
-              </div>
-              
-              <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-center gap-1">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Acceptance: {problem.acceptance}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <AlertTriangle className="w-4 h-4 text-orange-500" />
-                  <span>Submissions: {problem.submissions}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-blue-500" />
-                  <span>{problem.timeLimit}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MemoryStick className="w-4 h-4 text-purple-500" />
-                  <span>{problem.memoryLimit}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              {/* Problem Description */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle className="text-lg">Problem Description</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose dark:prose-invert max-w-none">
-                    <p className="whitespace-pre-line">{problem.description}</p>
+        <main className="flex-1 bg-background">
+          <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-4rem)]">
+            {/* Problem Description Panel */}
+            <ResizablePanel defaultSize={45} minSize={30}>
+              <div className="h-full flex flex-col bg-white dark:bg-gray-900">
+                {/* Simple Problem Header */}
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-3 mb-3">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {problem.title}
+                    </h1>
+                    <Badge className={`${getDifficultyColor(problem.difficulty)} font-semibold`}>
+                      {problem.difficulty}
+                    </Badge>
                   </div>
-                </CardContent>
-              </Card>
+                  
+                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    <span>Acceptance: {problem.acceptance}</span>
+                    <span>Submissions: {problem.submissions}</span>
+                    <span>{problem.timeLimit}</span>
+                    <span>{problem.memoryLimit}</span>
+                  </div>
+                </div>
 
-              {/* Examples */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle className="text-lg">Examples</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {problem.examples.map((example, index) => (
-                    <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <h4 className="font-semibold mb-2">Example {index + 1}:</h4>
-                      <div className="space-y-2">
-                        <div>
-                          <span className="font-medium">Input: </span>
-                          <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                            {example.input}
-                          </code>
-                        </div>
-                        <div>
-                          <span className="font-medium">Output: </span>
-                          <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                            {example.output}
-                          </code>
-                        </div>
-                        {example.explanation && (
-                          <div>
-                            <span className="font-medium">Explanation: </span>
-                            <span className="text-gray-600 dark:text-gray-400">{example.explanation}</span>
-                          </div>
-                        )}
+                {/* Simple Problem Content */}
+                <ScrollArea className="flex-1 px-6">
+                  <div className="py-6 space-y-6">
+                    {/* Problem Description */}
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Description</h3>
+                      <div className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                        {problem.description}
                       </div>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
 
-              {/* Constraints */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle className="text-lg">Constraints</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
-                    {problem.constraints.map((constraint, index) => (
-                      <li key={index}>{constraint}</li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              {/* Hints */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Lightbulb className="w-5 h-5 text-yellow-500" />
-                    Hints
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowHints(!showHints)}
-                      className="ml-auto"
-                    >
-                      {showHints ? "Hide" : "Show"}
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                {showHints && (
-                  <CardContent>
-                    <div className="space-y-2">
-                      {problem.hints.map((hint, index) => (
-                        <div key={index} className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                          <span className="font-medium text-yellow-800 dark:text-yellow-200">Hint {index + 1}: </span>
-                          <span className="text-yellow-700 dark:text-yellow-300">{hint}</span>
-                        </div>
-                      ))}
+                    {/* Examples */}
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Examples</h3>
+                      <div className="space-y-4">
+                        {problem.examples.map((example, index) => (
+                          <div key={index} className="border border-gray-200 dark:border-gray-700 rounded p-3">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">Example {index + 1}:</div>
+                            <div className="space-y-2 text-sm">
+                              <div>
+                                <span className="font-medium">Input: </span>
+                                <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-800 dark:text-gray-200">
+                                  {example.input}
+                                </code>
+                              </div>
+                              <div>
+                                <span className="font-medium">Output: </span>
+                                <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-800 dark:text-gray-200">
+                                  {example.output}
+                                </code>
+                              </div>
+                              {example.explanation && (
+                                <div>
+                                  <span className="font-medium">Explanation: </span>
+                                  <span className="text-gray-600 dark:text-gray-400">{example.explanation}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </CardContent>
-                )}
-              </Card>
 
-              {/* Tags */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Tags</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {problem.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
+                    {/* Constraints */}
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Constraints</h3>
+                      <ul className="space-y-1 text-gray-700 dark:text-gray-300">
+                        {problem.constraints.map((constraint, index) => (
+                          <li key={index} className="text-sm">• {constraint}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Tags</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {problem.tags.map((tag, index) => (
+                          <span key={index} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                </ScrollArea>
+              </div>
+            </ResizablePanel>
 
-          {/* Code Editor Panel - Right Side */}
-          <div className="w-1/2 flex flex-col">
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Solution
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm">
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Reset
-                  </Button>
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                    <Play className="w-4 h-4 mr-2" />
-                    Run Code
-                  </Button>
+            <ResizableHandle className="w-2 bg-border hover:bg-border/80 transition-colors" />
+
+            {/* Code Editor Panel */}
+            <ResizablePanel defaultSize={55} minSize={40}>
+              <div className="h-full flex flex-col bg-black">
+                {/* Enhanced Header */}
+                <div className="bg-gray-900 border-b border-gray-700 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <Code className="w-5 h-5 text-blue-400" />
+                        Code Editor
+                      </h2>
+                      <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
+                        <SelectTrigger className="w-[130px] bg-gray-800 border-gray-600 text-white hover:bg-gray-700 transition-colors">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-600">
+                          <SelectItem value="cpp" className="text-white hover:bg-gray-700 focus:bg-gray-700">
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                              C++
+                            </span>
+                          </SelectItem>
+                          <SelectItem value="python" className="text-white hover:bg-gray-700 focus:bg-gray-700">
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                              Python
+                            </span>
+                          </SelectItem>
+                          <SelectItem value="javascript" className="text-white hover:bg-gray-700 focus:bg-gray-700">
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                              JavaScript
+                            </span>
+                          </SelectItem>
+                          <SelectItem value="java" className="text-white hover:bg-gray-700 focus:bg-gray-700">
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                              Java
+                            </span>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="text-xs text-gray-400 bg-gray-800 px-3 py-1 rounded-full">
+                        {selectedLanguage.toUpperCase()}
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleRunCode}
+                        disabled={isRunning}
+                        className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600 transition-all duration-200 shadow-lg hover:shadow-blue-500/25"
+                      >
+                        {isRunning ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Play className="w-4 h-4 mr-2" />
+                        )}
+                        Run Code
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        className="bg-green-600 hover:bg-green-700 text-white transition-all duration-200 shadow-lg hover:shadow-green-500/25"
+                      >
+                        {isSubmitting ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4 mr-2" />
+                        )}
+                        Submit
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Enhanced Code Editor */}
+                <div className="flex-1 bg-black">
+                  <CodeEditor 
+                    initialCode={code} 
+                    initialLanguage={selectedLanguage}
+                    className="h-full"
+                  />
+                </div>
+
+                {/* Enhanced Test Results */}
+                <div className="h-64 border-t border-gray-700 bg-gray-900">
+                  <div className="h-full flex flex-col">
+                    {/* Test Results Header */}
+                    <div className="flex items-center justify-between p-4 border-b border-gray-700">
+                      <h3 className="text-white font-semibold flex items-center gap-2">
+                        <Terminal className="w-4 h-4 text-green-400" />
+                        Test Results
+                      </h3>
+                      {testResults.length > 0 && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-green-400">
+                            {testResults.filter(r => r.status === 'passed').length} Passed
+                          </span>
+                          <span className="text-gray-400">/</span>
+                          <span className="text-gray-400">{testResults.length} Total</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Test Results Content */}
+                    <div className="flex-1 overflow-y-auto p-4">
+                      {testResults.length > 0 ? (
+                        <div className="space-y-3">
+                          {testResults.map((result, index) => (
+                            <div key={result.id} className="bg-gray-800 border border-gray-700 rounded-lg p-3 hover:bg-gray-750 transition-colors">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-white font-medium">Case {index + 1}</span>
+                                  {result.status === "passed" ? (
+                                    <CheckCircle className="w-4 h-4 text-green-400" />
+                                  ) : (
+                                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-gray-400">
+                                  <span className="bg-gray-700 px-2 py-1 rounded">{result.time}</span>
+                                  <span className="bg-gray-700 px-2 py-1 rounded">{result.memory}</span>
+                                </div>
+                              </div>
+                              <div className="text-xs text-gray-300 font-mono bg-gray-900 p-2 rounded">
+                                <div><span className="text-blue-400">Input:</span> {result.input}</div>
+                                <div><span className="text-green-400">Expected:</span> {result.expected}</div>
+                                <div><span className="text-yellow-400">Output:</span> {result.actual}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-center">
+                          <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                            <Bug className="w-8 h-8 text-gray-600" />
+                          </div>
+                          <h4 className="text-white font-medium mb-2">No Test Results Yet</h4>
+                          <p className="text-gray-400 text-sm max-w-sm">
+                            Click "Run Code" to execute your solution and see the test results here.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="flex-1 bg-gray-900">
-              <CodeEditor 
-                initialCode={getDefaultCodeTemplate(problem)} 
-                initialLanguage="cpp"
-                className="h-full"
-              />
-            </div>
-          </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </main>
       </SidebarInset>
-    </div>
+    </>
   )
 }
