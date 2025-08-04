@@ -19,9 +19,9 @@ export async function registerUser(data: {
   password: string;
   firstname: string;
   lastname: string;
-  email: string;
+  dob: string;
 }) {
-  const res = await fetch(`${BASE_URL}/new/user/signup`, {
+  const res = await fetch(`${BASE_URL}/new/user/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -31,6 +31,7 @@ export async function registerUser(data: {
 
   return res.json();
 }
+
 
 export async function getProblems() {
   const res = await fetch(`${BASE_URL}/new/problems/getAllProblems`, {

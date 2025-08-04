@@ -1,4 +1,7 @@
 {
-  "/code-editor/page": "app/code-editor/page.js",
-  "/practice/page": "app/practice/page.js"
+  "/page": "app/page.js",
+  "/login/page": "app/login/page.js",
+  "/register/page": "app/register/page.js",
+  "/practice/page": "app/practice/page.js",
+  "/submissions/page": "app/submissions/page.js"
 }

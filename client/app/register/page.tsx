@@ -37,11 +37,11 @@ const handleSubmit = async (e: React.FormEvent) => {
     const data = await registerUser(userData);
     console.log("Server response:", data);
 
-    if (data.message && !data.error) {
-      alert(data.message || "Registration successful ✅");
+    if (data.success) {
+      alert(data.msg || "Registration successful ✅");
       router.push("/login"); // Redirect to login page after successful registration
     } else {
-      alert(data.message || "Registration failed ❌");
+      alert(data.msg || "Registration failed ❌");
     }
   } catch (err) {
     console.error("Error registering:", err);
