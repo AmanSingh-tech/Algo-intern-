@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Trophy, Users, Target, TrendingUp, Crown, Medal, Award } from 'lucide-react';
 import { getLeaderboard, getLeaderboardStats } from '@/lib/api';
+import { Header } from "@/components/header";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarInset } from "@/components/ui/sidebar";
 
 interface LeaderboardUser {
   id: string;
@@ -97,38 +100,59 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Leaderboard</h1>
-          <p className="text-muted-foreground">Loading leaderboard data...</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <>
+        <AppSidebar />
+        <SidebarInset>
+          <Header />
+          <main className="flex-1 bg-gradient-main min-h-screen">
+            <div className="container mx-auto p-6">
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold">Leaderboard</h1>
+                <p className="text-muted-foreground">Loading leaderboard data...</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-6">
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-8 bg-gray-200 rounded"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </main>
+        </SidebarInset>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Leaderboard</h1>
-          <p className="text-red-500">{error}</p>
-        </div>
-      </div>
+      <>
+        <AppSidebar />
+        <SidebarInset>
+          <Header />
+          <main className="flex-1 bg-gradient-main min-h-screen">
+            <div className="container mx-auto p-6">
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold">Leaderboard</h1>
+                <p className="text-red-500">{error}</p>
+              </div>
+            </div>
+          </main>
+        </SidebarInset>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <>
+      <AppSidebar />
+      <SidebarInset>
+        <Header />
+        <main className="flex-1 bg-gradient-main min-h-screen">
+          <div className="container mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Leaderboard</h1>
         <p className="text-muted-foreground">
@@ -269,5 +293,8 @@ export default function LeaderboardPage() {
         </CardContent>
       </Card>
     </div>
+          </main>
+        </SidebarInset>
+      </>
   );
 }

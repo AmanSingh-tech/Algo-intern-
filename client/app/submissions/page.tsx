@@ -17,6 +17,9 @@ import {
   BarChart3
 } from 'lucide-react';
 import { getUserSubmissions } from '@/lib/api';
+import { Header } from "@/components/header";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarInset } from "@/components/ui/sidebar";
 
 interface Submission {
   id: string;
@@ -107,41 +110,62 @@ export default function SubmissionsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">My Submissions</h1>
-          <p className="text-muted-foreground">Loading your submission history...</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <>
+        <AppSidebar />
+        <SidebarInset>
+          <Header />
+          <main className="flex-1 bg-gradient-main min-h-screen">
+            <div className="container mx-auto p-6">
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold">My Submissions</h1>
+                <p className="text-muted-foreground">Loading your submission history...</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-6">
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-8 bg-gray-200 rounded"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </main>
+        </SidebarInset>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">My Submissions</h1>
-          <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={loadSubmissions} variant="outline">
-            Try Again
-          </Button>
-        </div>
-      </div>
+      <>
+        <AppSidebar />
+        <SidebarInset>
+          <Header />
+          <main className="flex-1 bg-gradient-main min-h-screen">
+            <div className="container mx-auto p-6">
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold">My Submissions</h1>
+                <p className="text-red-500 mb-4">{error}</p>
+                <Button onClick={loadSubmissions} variant="outline">
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          </main>
+        </SidebarInset>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <>
+      <AppSidebar />
+      <SidebarInset>
+        <Header />
+        <main className="flex-1 bg-gradient-main min-h-screen">
+          <div className="container mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">My Submissions</h1>
         <p className="text-muted-foreground">
@@ -283,5 +307,8 @@ export default function SubmissionsPage() {
         </CardContent>
       </Card>
     </div>
+          </main>
+        </SidebarInset>
+      </>
   );
 }
