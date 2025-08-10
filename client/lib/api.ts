@@ -1,6 +1,6 @@
 // lib/api.ts
 
-const BASE_URL = process.env.NEXT_PUBLIC_NEXTJS_URL || "http://localhost:8000";
+const BASE_URL = process.env.NEXT_PUBLIC_NEXTJS_URL;
 
 export async function loginUser(username: string, password: string) {
   const res = await fetch(`${BASE_URL}/new/user/signin`, {
