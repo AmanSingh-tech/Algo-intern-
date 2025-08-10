@@ -125,7 +125,7 @@ export default function CodeEditorPage() {
       // Try backend evaluation service
       let response;
       try {
-        response = await fetch("http://localhost:8000/new/evaluation/run", {
+        response = await fetch(`${process.env.NEXT_PUBLIC_NEXTJS_URL || 'http://localhost:8000'}/new/evaluation/run`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
