@@ -155,6 +155,110 @@ route.post('/problems', async (req, res) => {
   }
 });
 
+// Create a problem with test cases and tags (enhanced version for frontend)
+route.post('/createProblem', async (req, res) => {
+  const { title, description, difficulty, tags = [], testCases = [] } = req.body;
+  const usertoken = req.headers.usertoken;
+
+  if (!title || !description || !difficulty) {
+    return res.status(400).json({
+      success: false,
+      message: "Title, description, and difficulty are required"
+    });
+  }
+
+  if (!usertoken || !usertoken.startsWith('Bearer ')) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication token required"
+    });
+  }
+
+  try {
+    // Create the problem first
+    const createdProblem = await prisma.problem.create({
+      data: {
+        title: title.trim(),
+        description: description.trim(),
+        difficulty: difficulty.toLowerCase(),
+        constraints: "",
+        inputtype: ""
+      }
+    });
+
+    // Create test cases if provided
+    if (testCases && testCases.length > 0) {
+      for (let i = 0; i < testCases.length; i++) {
+        const testCase = testCases[i];
+        await prisma.testCase.create({
+          data: {
+            problemId: createdProblem.id,
+            input: testCase.input || "",
+            output: testCase.output || "",
+            explanation: testCase.explanation || "",
+            sampleTC: i < 2 // First two test cases are sample cases
+          }
+        });
+      }
+    }
+
+    // Create tags if provided
+    if (tags && tags.length > 0) {
+      for (const tagName of tags) {
+        if (tagName.trim()) {
+          // Find or create tag
+          let tag = await prisma.tag.findFirst({
+            where: { tagName: tagName.trim().toLowerCase() }
+          });
+
+          if (!tag) {
+            tag = await prisma.tag.create({
+              data: { tagName: tagName.trim().toLowerCase() }
+            });
+          }
+
+          // Create problem-tag relationship
+          await prisma.problemTag.create({
+            data: {
+              problemId: createdProblem.id,
+              tagId: tag.id
+            }
+          });
+        }
+      }
+    }
+
+    // Fetch the complete problem with relations
+    const completeNewProblem = await prisma.problem.findUnique({
+      where: { id: createdProblem.id },
+      include: {
+        testCases: {
+          orderBy: { id: 'asc' }
+        },
+        tags: {
+          include: {
+            tag: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Problem created successfully with test cases and tags",
+      problem: completeNewProblem
+    });
+
+  } catch (error) {
+    console.error('Create problem error:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error creating problem",
+      error: error.message
+    });
+  }
+});
+
 
 
 

@@ -4,3 +4,15 @@ node_modules
 .env.example
 .next
 /generated/prisma
+/key
+/server/key
+# AWS credentials and config
+.aws/
+*.pem
+*.key
+*.crt
+aws-exports.js
+aws-exports.ts
+amplify/
+amplify-config.js
+amplify-config.ts

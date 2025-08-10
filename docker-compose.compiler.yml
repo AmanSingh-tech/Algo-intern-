@@ -1,0 +1,12 @@
+services:
+  compiler:
+    build:
+      context: ./Compiler
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./Compiler:/app
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
