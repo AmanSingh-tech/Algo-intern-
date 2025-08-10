@@ -34,7 +34,7 @@ export default function TestApiDebugPage() {
     
     try {
       console.log('Testing direct fetch...')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_NEXTJS_URL || 'http://localhost:8000'}/api/problem/c5885c5a-ee04-4405-911d-47708324e9c1`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_NEXTJS_URL}/api/problem/c5885c5a-ee04-4405-911d-47708324e9c1`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
