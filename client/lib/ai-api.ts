@@ -1,6 +1,6 @@
 // lib/ai-api.ts - Dedicated AI API functions
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+const BASE_URL = process.env.NEXT_PUBLIC_NEXTJS_URL || "http://localhost:8000";
 
 // Get AI-powered internship recommendations
 export async function getInternshipRecommendations(data: {
